@@ -1,17 +1,32 @@
-# Pre-Formal MD Evidence Runbook
+# Pre-Formal Readiness and Rehearsal Runbook
 
-Purpose: validate each formal stage without writing rehearsal rows into dblog.
-The temporary Harness uses DB-disabled logging and records the audit result as a
-Git-trackable Markdown artifact.
+Purpose: keep formal dblog evidence clean while still proving that the runtime
+envelope is ready before formal data generation.
 
 ## Boundary
 
 - Official evidence DB remains reserved for formal observations.
-- Pre-formal rehearsal writes no dblog rows.
-- Rehearsal outcomes are written under `validation_queries/preformal_md/`.
+- Level 0 readiness does not call Harness `/turn`.
+- Level 1 stage rehearsal may call only a temporary DB-disabled Harness `/turn`.
+- Pre-formal artifacts are not formal experimental evidence.
+- Pre-formal artifacts are excluded from threshold estimation, effect-size
+  estimation, statistical testing, and causal interpretation.
+- Pre-formal artifacts are written under `validation_queries/preformal_md/`.
 - Scratch JSONL copies are stored under `.node_sync_logs/` and ignored by Git.
 
-## Per-Stage Commands
+## Level 0: DB-Free Readiness Gate
+
+Run this before any DB-free stage rehearsal:
+
+```powershell
+python scripts\26_dbfree_readiness_gate_md.py --execute
+```
+
+This gate checks endpoint availability, actual first-turn payload feasibility,
+formal logprobs availability, response completeness, and runner cleanup without
+writing to dblog or invoking Harness `/turn`.
+
+## Level 1: DB-Free Stage Rehearsal
 
 Run these one stage at a time. Review the generated Markdown before proceeding
 to the corresponding formal DB-writing run.
@@ -38,6 +53,9 @@ Pre-formal `run_b` and `cf_*` stages automatically upload this pre-formal theta
 file into the temporary DB-disabled Harness. If the pre-formal theta file is
 missing, those stages are blocked.
 
+The pre-formal theta file is a stage-dependency rehearsal artifact only. It is
+not an official threshold estimate.
+
 Default pre-formal scope is intentionally small:
 
 - `tr`: 1 repetition, 2 turns
@@ -47,6 +65,7 @@ Use `--repetitions` and `--max-turns` only when a larger rehearsal is required.
 
 ## Pass Criteria
 
+- Level 0 readiness Markdown status is `PASS`.
 - Temporary Harness route returns HTTP 405 for `GET /turn`.
 - Stage runner completes against the DB-disabled Harness.
 - JSONL fallback rows are fetched and summarized.

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Run a pre-formal stage rehearsal with DB writes disabled and write MD evidence.
+"""Run a DB-free pre-formal stage rehearsal and write MD evidence.
 
 The official Harness on port 9000 is left untouched. This script starts a
 temporary Harness on a separate port with `logging.db.enabled = false`, executes
 one declared stage through the existing agent-side stage runner, fetches the
 JSONL fallback rows, verifies that dblog has no rows for the generated run ids,
-and writes a Markdown pre-formal audit artifact.
+and writes a Markdown rehearsal artifact.
+
+This is not the Level 0 readiness gate. It calls a temporary Harness /turn path
+and is therefore excluded from formal evidence, threshold estimation,
+effect-size estimation, statistical testing, and causal interpretation.
 """
 
 from __future__ import annotations
@@ -39,6 +43,12 @@ DEFAULT_JUMP_HOST = "jump"
 DEFAULT_HARNESS_IP = "10.1.1.110"
 DEFAULT_PORT = 9010
 DEFAULT_HARNESS_HOME = "/home/morophi/harness"
+ARTIFACT_DISCLAIMER = (
+    "This artifact is a DB-free pre-formal stage rehearsal report. It is not "
+    "formal experimental evidence and is excluded from CR, CR2, Run B, CF, "
+    "statistical testing, official threshold estimation, effect-size "
+    "estimation, and causal interpretation."
+)
 
 STAGES = {
     "tr": {"condition": "run_b", "run_mode": "smoke", "repetitions": 1, "max_turns": 2},
@@ -445,7 +455,13 @@ def build_preformal_theta(
         "theta_ma": percentile(values["d_ma_abs"], trigger_percentile),
         "source": "PREFORMAL_CR2_JSONL",
         "locked": True,
+        "official_formal_theta": False,
         "preformal_only": True,
+        "stage_dependency_rehearsal_only": True,
+        "excluded_from_formal_analysis": True,
+        "excluded_from_official_threshold_estimation": True,
+        "excluded_from_effect_size_estimation": True,
+        "excluded_from_causal_interpretation": True,
         "cr2_run_id": run_ids,
         "percentile_rule": {
             "theta_entropy": entropy_percentile,
@@ -454,7 +470,10 @@ def build_preformal_theta(
             "theta_ma": trigger_percentile,
         },
         "calibration": calibration,
-        "notes": "Pre-formal rehearsal theta. Do not use as official formal evidence.",
+        "notes": (
+            "Pre-formal rehearsal theta for stage-dependency validation only. "
+            "Do not use as official formal evidence or official threshold estimates."
+        ),
     }
     return theta, calibration
 
@@ -530,11 +549,13 @@ def write_md(
 ) -> Path:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-    path = args.output_dir / f"{args.stage}_{stamp}_preformal.md"
+    path = args.output_dir / f"dbfree_stage_rehearsal_{args.stage}_{stamp}_topk3.md"
     spec = STAGES[args.stage]
     status = "PASS" if all(result.ok for result in results) else "BLOCKED"
     lines = [
-        f"# Pre-Formal Stage Evidence: {args.stage}",
+        f"# DB-Free Stage Rehearsal Report: {args.stage}",
+        "",
+        f"> {ARTIFACT_DISCLAIMER}",
         "",
         f"- Status: `{status}`",
         f"- Created UTC: `{stamp}`",
@@ -542,7 +563,10 @@ def write_md(
         f"- Condition: `{spec['condition']}`",
         f"- Run mode: `{spec['run_mode']}`",
         f"- DB write policy: `disabled via temporary Harness config`",
-        f"- Evidence target: `Markdown only; JSONL scratch ignored by Git`",
+        f"- Evidence boundary: `rehearsal artifact; not formal evidence`",
+        f"- Evidence target: `Markdown report; JSONL scratch ignored by Git`",
+        f"- Harness /turn usage: `temporary DB-disabled Harness only`",
+        f"- Formal analysis inclusion: `excluded`",
         f"- Harness URL used: `http://{args.harness_ip}:{args.port}`",
         f"- Scenario: `{args.scenario}`",
         f"- Run IDs: `{', '.join(run_ids) if run_ids else '(none)'}`",
@@ -592,6 +616,7 @@ def write_dry_plan(args: argparse.Namespace) -> int:
                 "default_repetitions": spec["repetitions"],
                 "default_max_turns": spec["max_turns"],
                 "db_write_policy": "disabled via temporary Harness config",
+                "artifact_boundary": ARTIFACT_DISCLAIMER,
             },
             ensure_ascii=False,
             indent=2,

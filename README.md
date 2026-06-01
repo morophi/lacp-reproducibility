@@ -38,7 +38,7 @@ machine-specific network dumps are excluded from Git. See `SECURITY.md` and
 1. Read `REPO_TARGETS.md` for node-to-repo mapping.
 2. Read `REPRODUCIBILITY.md` for the reproducibility boundary and run order.
 3. Read `NODE_SYNC.md` for allowlist-based node change detection and sync.
-4. Read `PREFORMAL_RUNBOOK.md` for DB-free Markdown evidence rehearsals.
+4. Read `PREFORMAL_RUNBOOK.md` for DB-free readiness and rehearsal boundaries.
 5. Configure secrets through environment variables or private deployment files.
 6. Use `runtime_impl` and `scripts` as canonical source; deploy copies to nodes.
 
