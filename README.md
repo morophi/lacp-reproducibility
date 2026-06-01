@@ -22,6 +22,7 @@ canonical source in one place and treats node directories as deployment targets.
 
 - `runtime_impl/agent`: scenario replay and formal stage orchestration
 - `runtime_impl/harness`: Harness runtime, metrics, policy, node clients, config
+- `inference_nodes`: Per-node inference Modelfile and small node helpers
 - `scripts`: ingest, retrieval validation, freeze, preflight, and E2E helpers
 - `dblog_schema`: DB schema and migration checks
 - `validation_queries`: scenario and validation fixtures

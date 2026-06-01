@@ -31,8 +31,12 @@ Checked on 2026-06-01:
 | `scripts/01_*` to `scripts/15_*` | local/RAG | project or RAG ingest path | Corpus build and retrieval validation |
 | `scripts/16_*` to `scripts/25_*` | local/jump/harness as needed | stage-specific | Freeze, preflight, and E2E helpers |
 | `dblog_schema/*.sql` | `dblog` | operator-selected SQL path | Schema and migration checks |
-| `node_temp.py` | inference nodes | `/home/morophi/node_temp.py` | Thermal readout helper |
+| `inference_nodes/<node>/Modelfile` | inference nodes | `/home/morophi/Modelfile` | Ollama model template for qwen3-nothink |
+| `inference_nodes/<node>/node_temp.py` | inference nodes | `/home/morophi/node_temp.py` | Thermal readout helper |
+| `node_temp.py` | inference nodes | `/home/morophi/node_temp.py` | Shared copy of thermal readout helper |
 | `jump_temp_monitor.py` | `jump` | `/home/morophi/jump_temp_monitor.py` | Temperature monitor wrapper |
+| `runtime_impl/agent/scenario/*` | `jump` | `/home/morophi/agent/scenario/` | Scenario fixtures captured from the active node |
+| `runtime_impl/*/*benchmark*.py` and smoke/check helpers | selected nodes | node-local helper paths | Reproducibility helpers, not formal run outputs |
 
 ## Do Not Track
 
