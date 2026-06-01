@@ -39,6 +39,7 @@ Keep these out of Git:
 
 - ChromaDB data directories
 - Raw JSONL E2E and thermal logs
+- Pre-formal scratch JSONL under `.node_sync_logs`
 - Conversation exports
 - Office drafts and generated review documents
 - Local network diagnostics
