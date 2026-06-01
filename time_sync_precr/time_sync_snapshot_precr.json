@@ -1,0 +1,95 @@
+﻿{
+    "created_at_local":  "2026-05-22T21:00:53.0123898+09:00",
+    "dblog_alias":  "notebook",
+    "dblog_internal_ip":  "10.1.1.130",
+    "precr_checklist":  [
+                            "dblog DNS status check",
+                            "chrony upstream source status check",
+                            "dblog time serving status check",
+                            "confirm internal nodes select 10.1.1.130 in chronyc sources -v"
+                        ],
+    "notes":  [
+                  "dblog is configured with allow 10.1.1.0/24 and local stratum 10",
+                  "clients are configured to use dblog-only chrony source where applicable",
+                  "raw timestamp and corrected timestamp should both be stored during Pre-CR Test Run"
+              ],
+    "nodes":  [
+                  {
+                      "node":  "dblog",
+                      "alias":  "notebook",
+                      "hostname":  "dblog",
+                      "date_ins":  "2026-05-22T21:00:52,349709795+09:00",
+                      "tracking":  "Reference ID    : C17BF302 (193.123.243.2)\r\nStratum         : 4\r\nRef time (UTC)  : Fri May 22 12:00:12 2026\r\nSystem time     : 0.000109306 seconds slow of NTP time\r\nLast offset     : -0.000020031 seconds\r\nRMS offset      : 0.006380900 seconds\r\nFrequency       : 19.277 ppm slow\r\nResidual freq   : -0.031 ppm\r\nSkew            : 1.376 ppm\r\nRoot delay      : 0.007055003 seconds\r\nRoot dispersion : 0.001390843 seconds\r\nUpdate interval : 64.2 seconds\r\nLeap status     : Normal",
+                      "sources":  "\r\n  .-- Source mode  \u0027^\u0027 = server, \u0027=\u0027 = peer, \u0027#\u0027 = local clock.\r\n / .- Source state \u0027*\u0027 = current best, \u0027+\u0027 = combined, \u0027-\u0027 = not combined,\r\n| /             \u0027x\u0027 = may be in error, \u0027~\u0027 = too variable, \u0027?\u0027 = unusable.\r\n||                                                 .- xxxx [ yyyy ] +/- zzzz\r\n||      Reachability register (octal) -.           |  xxxx = adjusted offset,\r\n||      Log2(Polling interval) --.      |          |  yyyy = measured offset,\r\n||                                \\     |          |  zzzz = estimated error.\r\n||                                 |    |           \\\r\nMS Name/IP address         Stratum Poll Reach LastRx Last sample               \r\n===============================================================================\r\n^- 91.189.91.157                 2   6   357    40  -5148us[-5168us] +/-  115ms\r\n^- 185.125.190.58                2   6   377    37    -12ms[  -12ms] +/-  135ms\r\n^- 185.125.190.56                2   6   377    37  -3712us[-3712us] +/-  140ms\r\n^- 185.125.190.57                2   6   377    38  -4927us[-4927us] +/-  141ms\r\n^- 158.247.202.103               2   6   377    37   +587us[ +587us] +/-   21ms\r\n^- 121.174.142.82                3   6   377    39   +408us[ +408us] +/-   42ms\r\n^+ 3.39.176.65                   2   6   377    38   +695us[ +695us] +/- 6553us\r\n^* 193.123.243.2                 3   6   377    39   -277us[ -297us] +/- 5024us",
+                      "selected_dblog_10_1_1_130":  false,
+                      "tracking_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_tracking_dblog_precr.txt",
+                      "sources_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_sources_dblog_precr.txt"
+                  },
+                  {
+                      "node":  "harness",
+                      "alias":  "harness",
+                      "hostname":  "harness",
+                      "date_ins":  "2026-05-22T21:00:53,979650196+09:00",
+                      "tracking":  "Reference ID    : 0A010182 (10.1.1.130)\r\nStratum         : 5\r\nRef time (UTC)  : Fri May 22 12:00:42 2026\r\nSystem time     : 0.000000057 seconds slow of NTP time\r\nLast offset     : +0.000057643 seconds\r\nRMS offset      : 0.000412739 seconds\r\nFrequency       : 7.504 ppm fast\r\nResidual freq   : +0.016 ppm\r\nSkew            : 1.178 ppm\r\nRoot delay      : 0.007295984 seconds\r\nRoot dispersion : 0.001388921 seconds\r\nUpdate interval : 16.1 seconds\r\nLeap status     : Normal",
+                      "sources":  "\r\n  .-- Source mode  \u0027^\u0027 = server, \u0027=\u0027 = peer, \u0027#\u0027 = local clock.\r\n / .- Source state \u0027*\u0027 = current best, \u0027+\u0027 = combined, \u0027-\u0027 = not combined,\r\n| /             \u0027x\u0027 = may be in error, \u0027~\u0027 = too variable, \u0027?\u0027 = unusable.\r\n||                                                 .- xxxx [ yyyy ] +/- zzzz\r\n||      Reachability register (octal) -.           |  xxxx = adjusted offset,\r\n||      Log2(Polling interval) --.      |          |  yyyy = measured offset,\r\n||                                \\     |          |  zzzz = estimated error.\r\n||                                 |    |           \\\r\nMS Name/IP address         Stratum Poll Reach LastRx Last sample               \r\n===============================================================================\r\n^* 10.1.1.130                    4   4   377    11   -227ns[  +57us] +/- 5023us",
+                      "selected_dblog_10_1_1_130":  true,
+                      "tracking_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_tracking_harness_precr.txt",
+                      "sources_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_sources_harness_precr.txt"
+                  },
+                  {
+                      "node":  "inference1",
+                      "alias":  "inference1",
+                      "hostname":  "inferencenode1",
+                      "date_ins":  "2026-05-22T21:00:52,215218799+09:00",
+                      "tracking":  "Reference ID    : 0A010182 (10.1.1.130)\r\nStratum         : 5\r\nRef time (UTC)  : Fri May 22 12:00:42 2026\r\nSystem time     : 0.000008509 seconds slow of NTP time\r\nLast offset     : -0.000001015 seconds\r\nRMS offset      : 0.000521007 seconds\r\nFrequency       : 1.172 ppm slow\r\nResidual freq   : -0.004 ppm\r\nSkew            : 1.016 ppm\r\nRoot delay      : 0.007239437 seconds\r\nRoot dispersion : 0.001403496 seconds\r\nUpdate interval : 16.0 seconds\r\nLeap status     : Normal",
+                      "sources":  "\r\n  .-- Source mode  \u0027^\u0027 = server, \u0027=\u0027 = peer, \u0027#\u0027 = local clock.\r\n / .- Source state \u0027*\u0027 = current best, \u0027+\u0027 = combined, \u0027-\u0027 = not combined,\r\n| /             \u0027x\u0027 = may be in error, \u0027~\u0027 = too variable, \u0027?\u0027 = unusable.\r\n||                                                 .- xxxx [ yyyy ] +/- zzzz\r\n||      Reachability register (octal) -.           |  xxxx = adjusted offset,\r\n||      Log2(Polling interval) --.      |          |  yyyy = measured offset,\r\n||                                \\     |          |  zzzz = estimated error.\r\n||                                 |    |           \\\r\nMS Name/IP address         Stratum Poll Reach LastRx Last sample               \r\n===============================================================================\r\n^* 10.1.1.130                    4   4   377    10    -30us[  -31us] +/- 4993us",
+                      "selected_dblog_10_1_1_130":  true,
+                      "tracking_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_tracking_inference1_precr.txt",
+                      "sources_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_sources_inference1_precr.txt"
+                  },
+                  {
+                      "node":  "inference2",
+                      "alias":  "inference2",
+                      "hostname":  "inferencenode2",
+                      "date_ins":  "2026-05-22T21:00:52,230054474+09:00",
+                      "tracking":  "Reference ID    : 0A010182 (10.1.1.130)\r\nStratum         : 5\r\nRef time (UTC)  : Fri May 22 12:00:41 2026\r\nSystem time     : 0.000000055 seconds slow of NTP time\r\nLast offset     : +0.000043285 seconds\r\nRMS offset      : 0.000600166 seconds\r\nFrequency       : 6.328 ppm slow\r\nResidual freq   : +0.013 ppm\r\nSkew            : 1.353 ppm\r\nRoot delay      : 0.007234104 seconds\r\nRoot dispersion : 0.001379897 seconds\r\nUpdate interval : 16.3 seconds\r\nLeap status     : Normal",
+                      "sources":  "\r\n  .-- Source mode  \u0027^\u0027 = server, \u0027=\u0027 = peer, \u0027#\u0027 = local clock.\r\n / .- Source state \u0027*\u0027 = current best, \u0027+\u0027 = combined, \u0027-\u0027 = not combined,\r\n| /             \u0027x\u0027 = may be in error, \u0027~\u0027 = too variable, \u0027?\u0027 = unusable.\r\n||                                                 .- xxxx [ yyyy ] +/- zzzz\r\n||      Reachability register (octal) -.           |  xxxx = adjusted offset,\r\n||      Log2(Polling interval) --.      |          |  yyyy = measured offset,\r\n||                                \\     |          |  zzzz = estimated error.\r\n||                                 |    |           \\\r\nMS Name/IP address         Stratum Poll Reach LastRx Last sample               \r\n===============================================================================\r\n^* 10.1.1.130                    4   4   377    11  -2135ns[  +41us] +/- 4992us",
+                      "selected_dblog_10_1_1_130":  true,
+                      "tracking_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_tracking_inference2_precr.txt",
+                      "sources_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_sources_inference2_precr.txt"
+                  },
+                  {
+                      "node":  "inference3",
+                      "alias":  "inference3",
+                      "hostname":  "inferencenode3",
+                      "date_ins":  "2026-05-22T21:00:52,244785921+09:00",
+                      "tracking":  "Reference ID    : 0A010182 (10.1.1.130)\r\nStratum         : 5\r\nRef time (UTC)  : Fri May 22 12:00:40 2026\r\nSystem time     : 0.000000057 seconds slow of NTP time\r\nLast offset     : +0.000046188 seconds\r\nRMS offset      : 0.000523096 seconds\r\nFrequency       : 2.110 ppm slow\r\nResidual freq   : +0.004 ppm\r\nSkew            : 0.657 ppm\r\nRoot delay      : 0.007149420 seconds\r\nRoot dispersion : 0.001387591 seconds\r\nUpdate interval : 16.3 seconds\r\nLeap status     : Normal",
+                      "sources":  "\r\n  .-- Source mode  \u0027^\u0027 = server, \u0027=\u0027 = peer, \u0027#\u0027 = local clock.\r\n / .- Source state \u0027*\u0027 = current best, \u0027+\u0027 = combined, \u0027-\u0027 = not combined,\r\n| /             \u0027x\u0027 = may be in error, \u0027~\u0027 = too variable, \u0027?\u0027 = unusable.\r\n||                                                 .- xxxx [ yyyy ] +/- zzzz\r\n||      Reachability register (octal) -.           |  xxxx = adjusted offset,\r\n||      Log2(Polling interval) --.      |          |  yyyy = measured offset,\r\n||                                \\     |          |  zzzz = estimated error.\r\n||                                 |    |           \\\r\nMS Name/IP address         Stratum Poll Reach LastRx Last sample               \r\n===============================================================================\r\n^* 10.1.1.130                    4   4   377    11  +1622ns[  +48us] +/- 4992us",
+                      "selected_dblog_10_1_1_130":  true,
+                      "tracking_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_tracking_inference3_precr.txt",
+                      "sources_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_sources_inference3_precr.txt"
+                  },
+                  {
+                      "node":  "jump",
+                      "alias":  "jump",
+                      "hostname":  "proxy-jump",
+                      "date_ins":  "2026-05-22T21:00:53,626466366+09:00",
+                      "tracking":  "Reference ID    : 0A010182 (10.1.1.130)\r\nStratum         : 5\r\nRef time (UTC)  : Fri May 22 12:00:41 2026\r\nSystem time     : 0.000004940 seconds fast of NTP time\r\nLast offset     : +0.000020707 seconds\r\nRMS offset      : 0.001032048 seconds\r\nFrequency       : 0.620 ppm slow\r\nResidual freq   : +0.029 ppm\r\nSkew            : 2.648 ppm\r\nRoot delay      : 0.007293826 seconds\r\nRoot dispersion : 0.001425780 seconds\r\nUpdate interval : 16.2 seconds\r\nLeap status     : Normal",
+                      "sources":  "\r\n  .-- Source mode  \u0027^\u0027 = server, \u0027=\u0027 = peer, \u0027#\u0027 = local clock.\r\n / .- Source state \u0027*\u0027 = current best, \u0027+\u0027 = combined, \u0027-\u0027 = not combined,\r\n| /             \u0027x\u0027 = may be in error, \u0027~\u0027 = too variable, \u0027?\u0027 = unusable.\r\n||                                                 .- xxxx [ yyyy ] +/- zzzz\r\n||      Reachability register (octal) -.           |  xxxx = adjusted offset,\r\n||      Log2(Polling interval) --.      |          |  yyyy = measured offset,\r\n||                                \\     |          |  zzzz = estimated error.\r\n||                                 |    |           \\\r\nMS Name/IP address         Stratum Poll Reach LastRx Last sample               \r\n===============================================================================\r\n^* 10.1.1.130                    4   4   377    12  -2770ns[  +18us] +/- 5022us",
+                      "selected_dblog_10_1_1_130":  true,
+                      "tracking_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_tracking_jump_precr.txt",
+                      "sources_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_sources_jump_precr.txt"
+                  },
+                  {
+                      "node":  "rag",
+                      "alias":  "rag",
+                      "hostname":  "RAG",
+                      "date_ins":  "2026-05-22T21:00:54,026717760+09:00",
+                      "tracking":  "Reference ID    : 0A010182 (10.1.1.130)\r\nStratum         : 5\r\nRef time (UTC)  : Fri May 22 12:00:42 2026\r\nSystem time     : 0.000000052 seconds slow of NTP time\r\nLast offset     : +0.000049473 seconds\r\nRMS offset      : 0.000440118 seconds\r\nFrequency       : 3.285 ppm fast\r\nResidual freq   : +0.023 ppm\r\nSkew            : 1.168 ppm\r\nRoot delay      : 0.007299386 seconds\r\nRoot dispersion : 0.001388722 seconds\r\nUpdate interval : 16.3 seconds\r\nLeap status     : Normal",
+                      "sources":  "\r\n  .-- Source mode  \u0027^\u0027 = server, \u0027=\u0027 = peer, \u0027#\u0027 = local clock.\r\n / .- Source state \u0027*\u0027 = current best, \u0027+\u0027 = combined, \u0027-\u0027 = not combined,\r\n| /             \u0027x\u0027 = may be in error, \u0027~\u0027 = too variable, \u0027?\u0027 = unusable.\r\n||                                                 .- xxxx [ yyyy ] +/- zzzz\r\n||      Reachability register (octal) -.           |  xxxx = adjusted offset,\r\n||      Log2(Polling interval) --.      |          |  yyyy = measured offset,\r\n||                                \\     |          |  zzzz = estimated error.\r\n||                                 |    |           \\\r\nMS Name/IP address         Stratum Poll Reach LastRx Last sample               \r\n===============================================================================\r\n^* 10.1.1.130                    4   4   377    11   -797ns[  +49us] +/- 5021us",
+                      "selected_dblog_10_1_1_130":  true,
+                      "tracking_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_tracking_rag_precr.txt",
+                      "sources_file":  "C:\\Users\\morophi\\OneDrive\\문서\\New project\\time_sync_precr\\time_sync_sources_rag_precr.txt"
+                  }
+              ]
+}

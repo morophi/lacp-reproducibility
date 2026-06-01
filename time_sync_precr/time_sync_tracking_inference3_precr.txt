@@ -1,0 +1,19 @@
+﻿node=inference3
+alias=inference3
+hostname=inferencenode3
+date_ins=2026-05-22T21:00:52,244785921+09:00
+
+chronyc tracking
+Reference ID    : 0A010182 (10.1.1.130)
+Stratum         : 5
+Ref time (UTC)  : Fri May 22 12:00:40 2026
+System time     : 0.000000057 seconds slow of NTP time
+Last offset     : +0.000046188 seconds
+RMS offset      : 0.000523096 seconds
+Frequency       : 2.110 ppm slow
+Residual freq   : +0.004 ppm
+Skew            : 0.657 ppm
+Root delay      : 0.007149420 seconds
+Root dispersion : 0.001387591 seconds
+Update interval : 16.3 seconds
+Leap status     : Normal

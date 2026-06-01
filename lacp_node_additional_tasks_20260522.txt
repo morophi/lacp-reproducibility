@@ -1,0 +1,90 @@
+LACP node additional task list
+Generated: 2026-05-22
+
+Corrected operating assumptions
+===============================
+- Every node sends its own logs directly to the dblog node in near real time.
+- Harness does not receive logs from other nodes and does not retransmit logs.
+- Harness must remain focused on trigger generation, inference node data receipt, and experiment control.
+- Adding extra relay/logging roles to Harness can affect experiment validity and must be avoided.
+- The dblog node is Ubuntu 24.04.
+- Every node has its own virtual environment under that node's home directory.
+- Package checks must be performed inside each node's own virtual environment.
+- Log destination must be dblog, not Harness.
+
+Node-by-node additional tasks
+=============================
+
+iMac
+----
+[ ] Add direct dblog sync for embedding ingest logs, manifests, hashes, and transfer records.
+[ ] Decide whether run_ingest.py should call dblog sync automatically after manifest completion.
+[ ] Consider adding 07_sync_logs_to_dblog.py.
+[ ] Record dblog transfer success/failure and SHA256 verification.
+[ ] Standardize dblog destination path for iMac embedding logs.
+
+dblog
+-----
+[ ] Confirm actual OS is Ubuntu 24.04.
+[ ] Standardize central log root directory.
+[ ] Define per-node log directory structure:
+    - imac_embedding
+    - rag
+    - harness
+    - inference1
+    - inference2
+    - inference3
+    - agent
+[ ] Locate dblog virtual environment under the home directory.
+[ ] Check required packages inside dblog venv for log receipt, storage, and DB persistence.
+[ ] Confirm SSH/SCP permissions and destination paths for direct log receipt from every node.
+
+RAG
+---
+[ ] Locate RAG virtual environment under the home directory.
+[ ] Check required packages inside RAG venv, especially numpy and chromadb.
+[ ] Add or verify script to load chunks, embeddings, metadata, and manifest into ChromaDB collection lacp_docs.
+[ ] Confirm ChromaDB persistent path, expected target: /data/chromadb.
+[ ] Verify collection.count() after load.
+[ ] Run sample retrieval tests.
+[ ] Confirm RAG sends its own service/load logs directly to dblog.
+
+Harness
+-------
+[ ] Locate Harness virtual environment under the home directory.
+[ ] Check required packages inside Harness venv for experiment control, trigger handling, data receipt, and metrics.
+[ ] Do not add log relay/retransmission functionality.
+[ ] Confirm Harness sends only its own execution logs directly to dblog.
+
+inference1
+----------
+[ ] Locate inference1 virtual environment under the home directory.
+[ ] Check inference/Ollama/log-send related packages inside inference1 venv.
+[ ] Confirm inference1 sends its own inference logs directly to dblog.
+
+inference2
+----------
+[ ] Locate inference2 virtual environment under the home directory.
+[ ] Check inference/Ollama/log-send related packages inside inference2 venv.
+[ ] Confirm inference2 sends its own inference logs directly to dblog.
+
+inference3
+----------
+[ ] Locate inference3 virtual environment under the home directory.
+[ ] Check inference/Ollama/log-send related packages inside inference3 venv.
+[ ] Confirm inference3 sends its own inference logs directly to dblog.
+
+agent / civil complaint node
+----------------------------
+[ ] Locate agent virtual environment under the home directory.
+[ ] Check trigger/utterance-generation related packages inside agent venv.
+[ ] Confirm agent sends its own trigger/utterance logs directly to dblog.
+
+All nodes
+---------
+[ ] Reconfirm passwordless SSH/SCP reachability.
+[ ] Collect python, pip, and pip freeze from each node's own venv.
+[ ] Confirm no node is configured to send logs through Harness.
+[ ] Confirm each node sends logs directly to dblog.
+[ ] Confirm local fallback log path for dblog transfer failure.
+[ ] Confirm log filename convention includes run_id, node_id, timestamp, and role.

@@ -1,0 +1,30 @@
+{"turn": 1, "role": "user", "content": "안녕하세요, 저희 어머니 복지 관련해서 여쭤볼 게 있어서요. 기초생활수급자 신청할 때 나이 제한이 따로 있나요?", "seg": "S1", "raw_id": "SW0005", "n_value": 474, "live": 3, "conf": 0}
+{"turn": 2, "role": "user", "content": "아 그렇군요. 어머니가 장애 등록도 되어 있거든요. 장애수당은 어떤 분들이 받을 수 있는 건가요?", "seg": "S1", "raw_id": "OD0140", "n_value": 1476, "live": 3, "conf": 0}
+{"turn": 3, "role": "user", "content": "어머니가 국민연금을 받고 계신데, 그러면 기초연금도 받을 수 있나요?", "seg": "S1", "raw_id": "OD0158", "n_value": 1589, "live": 2, "conf": 1}
+{"turn": 4, "role": "user", "content": "처음 알아보는 건데요, 장애인활동지원 급여가 어떤 종류로 나뉘는지도 알 수 있을까요?", "seg": "S1", "raw_id": "OD0145", "n_value": 1495, "live": 2, "conf": 0}
+{"turn": 5, "role": "user", "content": "저도 지금 갑자기 상황이 어려워져서요. 긴급복지지원을 받으면 최대 몇 번까지 지원받을 수 있나요?", "seg": "S1", "raw_id": "SW0035", "n_value": 916, "live": 3, "conf": 0}
+{"turn": 6, "role": "user", "content": "제 소득이 있는 게 문제가 될까 봐서요. 자녀 소득이 높아도 어머니가 기초연금을 받을 수 있나요?", "seg": "S1", "raw_id": "OD0170", "n_value": 3102, "live": 3, "conf": 0}
+{"turn": 7, "role": "user", "content": "저 지금 실업급여를 받고 있는데, 이게 어머니 수급 신청할 때 소득으로 잡히나요?", "seg": "S2", "raw_id": "SW0007", "n_value": 484, "live": 2, "conf": 0}
+{"turn": 8, "role": "user", "content": "그리고 지인이랑 공동명의 자동차가 있는데요, 재산 산정은 어떻게 하나요?", "seg": "S2", "raw_id": "SW0011", "n_value": 500, "live": 3, "conf": 0}
+{"turn": 9, "role": "user", "content": "그러면 기본재산 공제 금액이 얼마인지도 알고 싶어요.", "seg": "S2", "raw_id": "SW0020", "n_value": 544, "live": 3, "conf": 0}
+{"turn": 10, "role": "user", "content": "전세도 지인이랑 공동명의인데요. 계약서 제출할 때 재산 반영은 어떻게 되나요?", "seg": "S2", "raw_id": "SW0071", "n_value": 4832, "live": 3, "conf": 0}
+{"turn": 11, "role": "user", "content": "근로소득공제 적용 대상이 확대됐다는데, 제가 다시 취업하게 되면 저도 해당되나요?", "seg": "S2", "raw_id": "SW0076", "n_value": 5272, "live": 2, "conf": 0}
+{"turn": 12, "role": "user", "content": "부양의무자인 제 입장에서 기본재산 공제 기준은 어떻게 되는 건가요?", "seg": "S2", "raw_id": "SW0047", "n_value": 2601, "live": 3, "conf": 0}
+{"turn": 13, "role": "user", "content": "아 그런데요, 어머니가 장애 등록을 오래전에 하셨는데, 장애등급제가 폐지됐다고 하던데 기존에 등록된 분들도 재심사를 받아야 하나요?", "seg": "S3", "raw_id": "OD0131", "n_value": 1415, "live": 2, "conf": 1}
+{"turn": 14, "role": "user", "content": "부양의무자 기준도 폐지됐다고 하던데, 저희 가정도 해당이 되나요?", "seg": "S3", "raw_id": "SW0089", "n_value": 6791, "live": 2, "conf": 1}
+{"turn": 15, "role": "user", "content": "어머니가 중복장애인이신데요, 장애인연금 대신 장애수당을 선택해서 받는 게 가능한가요?", "seg": "S3", "raw_id": "OD0143", "n_value": 1482, "live": 3, "conf": 0}
+{"turn": 16, "role": "user", "content": "저는 지금 시험 준비 중인데요, 조건부수급자가 되면 자활 참여를 유예받을 수 있나요?", "seg": "S3", "raw_id": "SW0056", "n_value": 3181, "live": 2, "conf": 0}
+{"turn": 17, "role": "user", "content": "제가 청년내일저축계좌 가입 중인데요, 청년희망적금에도 동시에 가입할 수 있나요?", "seg": "S3", "raw_id": "SW0103", "n_value": 9115, "live": 2, "conf": 0}
+{"turn": 18, "role": "user", "content": "어머니가 활동지원서비스를 받고 계신데, 곧 65세가 되세요. 장기요양등급을 받아도 계속 이용 가능한가요?", "seg": "S3", "raw_id": "OD0251", "n_value": 6741, "live": 3, "conf": 0}
+{"turn": 19, "role": "user", "content": "제가 신용불량자라서 통장이 압류될 것 같은데, 생계급여는 어떻게 받을 수 있나요?", "seg": "S4", "raw_id": "SW0017", "n_value": 520, "live": 3, "conf": 2}
+{"turn": 20, "role": "user", "content": "그리고 어머니 기초연금이 갑자기 정지됐다는 통보를 받았거든요. 어떤 경우에 정지가 되는 건가요?", "seg": "S4", "raw_id": "OD0209", "n_value": 2884, "live": 1, "conf": 1}
+{"turn": 21, "role": "user", "content": "저도 자활근로를 몇 달 못 나갔는데 자격이 중지됐다고 하는데, 어떻게 해야 하나요?", "seg": "S4", "raw_id": "SW0105", "n_value": 10356, "live": 3, "conf": 1}
+{"turn": 22, "role": "user", "content": "혹시 아버지가 교정시설에 계신데요, 수감 중인 기초연금 수급자는 연금이 정지되나요?", "seg": "S4", "raw_id": "OD0217", "n_value": 4954, "live": 3, "conf": 1}
+{"turn": 23, "role": "user", "content": "자립역량교육을 한 번 빠졌다고 희망키움통장 자격을 박탈한다고 하는데, 그게 맞는 건가요?", "seg": "S4", "raw_id": "SW0118", "n_value": 700, "live": 3, "conf": 1}
+{"turn": 24, "role": "user", "content": "부모님 두 분이 다 기초연금을 받으시는데, 왜 감액이 되는 건가요?", "seg": "S4", "raw_id": "OD0173", "n_value": 3485, "live": 3, "conf": 1}
+{"turn": 25, "role": "user", "content": "지금 주민센터 가기가 어려운 상황인데, 수급자 증명서를 온라인으로 발급받을 수 있나요?", "seg": "S5", "raw_id": "SW0018", "n_value": 521, "live": 2, "conf": 0}
+{"turn": 26, "role": "user", "content": "어머니가 지금 저희 집에 계시는데 주소는 다른 데 되어 있거든요. 장기요양인정 신청을 실거주지 관할로 해도 되나요?", "seg": "S5", "raw_id": "OD0111", "n_value": 1305, "live": 2, "conf": 0}
+{"turn": 27, "role": "user", "content": "긴급복지지원 신청 절차가 어떻게 되는지 알고 싶어요. 빨리 진행해야 할 것 같아서요.", "seg": "S5", "raw_id": "SW0027", "n_value": 857, "live": 3, "conf": 0}
+{"turn": 28, "role": "user", "content": "청년저축계좌 신청할 때 따로 사는 부모님 금융정보제공동의서도 필요한가요?", "seg": "S5", "raw_id": "SW0078", "n_value": 5472, "live": 2, "conf": 0}
+{"turn": 29, "role": "user", "content": "어머니 장애인복지카드 재발급도 해야 하는데, 직접 가시기 힘드셔서요. 온라인으로는 신청할 수 없나요?", "seg": "S5", "raw_id": "OD0223", "n_value": 1407, "live": 2, "conf": 0}
+{"turn": 30, "role": "user", "content": "마지막으로요, 만약 수급 탈락이 되면 재신청할 때 근로능력 평가 서류도 처음부터 다시 제출해야 하나요?", "seg": "S5", "raw_id": "SW0116", "n_value": 683, "live": 3, "conf": 1}

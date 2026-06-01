@@ -1,0 +1,74 @@
+# Python/runtime caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+*_venv/
+
+# Local/editor state
+.vscode/
+.idea/
+*.tmp
+*.bak
+*.bak.*
+
+# OS and network/local state dumps
+Thumbs.db
+.DS_Store
+tailscale-*.txt
+netadapters.txt
+netprofiles.txt
+open-test-port-*.ps1
+
+# Conversation exports and private operational transcripts
+conversation_export/
+conversation_export_all/
+
+# Generated office/revision artifacts
+*.docx
+*.pptx
+*.xlsx
+*.pdf
+*.png
+*.tar.gz
+*.zip
+~$*
+
+# Runtime logs and large generated experiment artifacts
+logs/
+temp_logs/
+validation_queries/e2e_runs/*.jsonl
+validation_queries/e2e_runs/*_thermal.jsonl
+validation_queries/preflight/*.json
+validation_queries/logprobs_preflight/*.json
+verify_remote/*_chunks.jsonl
+verify_remote/*_turn_logs.jsonl
+verify_remote/*_prompt_size_test.json
+verify_remote/*_retrieval_validation.json
+lacp_revision_work/*.json
+
+# Local-only admin scripts that may contain machine-specific secrets
+shutdown*.sh
+fix_*.sh
+sync_*_time.sh
+
+# Chroma/vector DB and model/runtime payloads
+chromadb_data/
+embeddings/
+*.npy
+*.faiss
+*.sqlite
+*.sqlite3
+
+# Secrets and local overrides
+.env
+.env.*
+*.local
+*.secret
+secrets/
+runtime_impl/harness/config/*local*

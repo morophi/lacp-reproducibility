@@ -1,0 +1,19 @@
+﻿node=jump
+alias=jump
+hostname=proxy-jump
+date_ins=2026-05-22T21:00:53,626466366+09:00
+
+chronyc tracking
+Reference ID    : 0A010182 (10.1.1.130)
+Stratum         : 5
+Ref time (UTC)  : Fri May 22 12:00:41 2026
+System time     : 0.000004940 seconds fast of NTP time
+Last offset     : +0.000020707 seconds
+RMS offset      : 0.001032048 seconds
+Frequency       : 0.620 ppm slow
+Residual freq   : +0.029 ppm
+Skew            : 2.648 ppm
+Root delay      : 0.007293826 seconds
+Root dispersion : 0.001425780 seconds
+Update interval : 16.2 seconds
+Leap status     : Normal

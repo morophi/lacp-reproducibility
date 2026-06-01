@@ -1,0 +1,9 @@
+{
+  "theta_entropy": 0.0,
+  "theta_lms": 0.0,
+  "theta_cds": 1.0,
+  "theta_ma": 0.0,
+  "source": "DEV_PLACEHOLDER",
+  "locked": false,
+  "notes": "Replace after CR2. Do not use for final Run B."
+}

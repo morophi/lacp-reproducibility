@@ -1,0 +1,41 @@
+{
+  "scenario_id": "precr_e2e_5query_v1",
+  "condition": "run_b",
+  "purpose": "Pre-CR E2E readiness smoke only; not causal evidence.",
+  "retrieval_policy_candidate": {
+    "embedding_text_policy": "body_only_v1",
+    "candidate_generation": "vector_top30 + lexical_top30",
+    "fusion": "lexical_weighted_RRF_0.7_0.3",
+    "rrf_k": 60,
+    "final_topK": 5,
+    "sidecar_prompt_injection": false,
+    "sidecar_logging_only": true
+  },
+  "turns": [
+    {
+      "turn_no": 1,
+      "query_type": "table_sensitive",
+      "utterance": "생계급여 선정 기준을 표나 기준값 중심으로 확인하고 싶습니다. 가구원 수별 기준 중위소득과 관련된 기준은 어떻게 보나요?"
+    },
+    {
+      "turn_no": 2,
+      "query_type": "eligibility",
+      "utterance": "의료급여 수급권자나 복지급여 대상자로 선정되려면 어떤 자격 조건을 확인해야 하나요?"
+    },
+    {
+      "turn_no": 3,
+      "query_type": "exception",
+      "utterance": "긴급복지나 복지서비스 지원에서 제외되거나 중지될 수 있는 사유는 어떤 것이 있나요?"
+    },
+    {
+      "turn_no": 4,
+      "query_type": "procedure",
+      "utterance": "복지서비스를 신청할 때 접수, 조사, 결정, 통보 절차는 어떤 순서로 진행되나요?"
+    },
+    {
+      "turn_no": 5,
+      "query_type": "title_direct",
+      "utterance": "희망복지지원단 업무안내의 관련 서식과 통합사례관리 의뢰서 서식은 어디에서 확인하나요?"
+    }
+  ]
+}

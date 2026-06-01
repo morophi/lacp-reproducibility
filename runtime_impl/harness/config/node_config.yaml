@@ -1,0 +1,122 @@
+{
+  "nodes": {
+    "A": {
+      "url": "http://10.1.1.10:11434/api/chat",
+      "role": "rag_sc"
+    },
+    "B": {
+      "url": "http://10.1.1.20:11434/api/chat",
+      "role": "rag_only"
+    },
+    "C": {
+      "url": "http://10.1.1.30:11434/api/chat",
+      "role": "baseline"
+    }
+  },
+  "rag": {
+    "url": "http://10.1.1.120:8000",
+    "host": "10.1.1.120",
+    "port": 8000,
+    "collection": "lacp_docs_v1_full_guideline_table_safe_body_only_v1",
+    "top_k": 3,
+    "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  },
+  "harness": {
+    "host": "0.0.0.0",
+    "port": 9000
+  },
+  "model": {
+    "name": "qwen3-nothink",
+    "temperature": 0.0,
+    "seed": 42,
+    "thinking": false,
+    "num_predict": 512,
+    "endpoint_by_run_mode": {
+      "smoke": "openai_chat_completions",
+      "formal": "openai_chat_completions"
+    },
+    "request_logprobs": true,
+    "top_logprobs": 5,
+    "strip_empty_think_tags": true
+  },
+  "logging": {
+    "jsonl_fallback_dir": "/home/morophi/harness/logs/runs",
+    "db": {
+      "enabled": true,
+      "require_db": false,
+      "host": "10.1.1.130",
+      "port": 3306,
+      "user": "morophi",
+      "password": "${LACP_DB_PASSWORD}",
+      "database": "lacp_db",
+      "async_enabled": true,
+      "async_queue_maxsize": 1000,
+      "async_flush_timeout_s": 30
+    }
+  },
+  "run": {
+    "default_mode": "formal",
+    "bootstrap_first_turn": false,
+    "sc_without_rag": false
+  },
+  "run_modes": {
+    "smoke": {
+      "force_intervention_run_b": true,
+      "allow_null_metrics": true,
+      "require_metric_trigger": false,
+      "rag_top_k": 3,
+      "num_predict": 256
+    },
+    "formal": {
+      "force_intervention_run_b": false,
+      "allow_null_metrics": false,
+      "require_metric_trigger": true
+    }
+  },
+  "counterfactual": {
+    "top_k": 3,
+    "cf_a": {
+      "substitution_query": "",
+      "document_c_hash": "",
+      "document_d_hash": ""
+    },
+    "cf_b": {
+      "verify_empty_result": true
+    },
+    "cf_c": {
+      "opposing_query": "",
+      "opposing_document_hash": "",
+      "date_identifiers_removed": false
+    },
+    "cf_d": {
+      "forced_turns": [5, 15, 25]
+    },
+    "cf_e": {
+      "external_payload_query": "",
+      "model_weights_fixed": true
+    },
+    "cf_f": {
+      "seed": 424242,
+      "n": 5,
+      "non_trigger_eligible_turns": [],
+      "injection_turns": []
+    }
+  },
+  "metrics": {
+    "ma": {
+      "enabled": true,
+      "include_unclassified_in_denominator": true
+    },
+    "cds": {
+      "enabled": true,
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "reference_embedding_path": "/home/morophi/harness/reference/reference_embedding.npy",
+      "reference_embedding_hash_path": "/home/morophi/harness/reference/reference_embedding.sha256"
+    },
+    "lms": {
+      "enabled": true,
+      "theta_entropy": 0.0,
+      "allow_unavailable_for_trigger": false
+    }
+  }
+}

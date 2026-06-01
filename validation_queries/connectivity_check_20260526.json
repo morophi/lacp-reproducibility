@@ -1,0 +1,112 @@
+{
+  "purpose": "closed-network connectivity check through jump only",
+  "state_changing_calls_executed": false,
+  "ssh_alias_checks": [
+    {
+      "name": "ssh:jump",
+      "target": "jump",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "ok",
+      "stderr": ""
+    },
+    {
+      "name": "ssh:harness",
+      "target": "harness",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "ok",
+      "stderr": ""
+    },
+    {
+      "name": "ssh:rag",
+      "target": "rag",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "ok",
+      "stderr": ""
+    },
+    {
+      "name": "ssh:inference1",
+      "target": "inference1",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "ok",
+      "stderr": ""
+    },
+    {
+      "name": "ssh:inference2",
+      "target": "inference2",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "ok",
+      "stderr": ""
+    },
+    {
+      "name": "ssh:inference3",
+      "target": "inference3",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "ok",
+      "stderr": ""
+    },
+    {
+      "name": "ssh:dblog",
+      "target": "dblog",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "ok",
+      "stderr": ""
+    }
+  ],
+  "service_port_checks_from_jump": [
+    {
+      "name": "service:harness_api",
+      "target": "10.1.1.110:9000",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "service:rag_api",
+      "target": "10.1.1.120:8000",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "service:node_a_ollama",
+      "target": "10.1.1.10:11434",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "service:node_b_ollama",
+      "target": "10.1.1.20:11434",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "service:node_c_ollama",
+      "target": "10.1.1.30:11434",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "service:dblog_mysql",
+      "target": "10.1.1.130:3306",
+      "reachable": true,
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

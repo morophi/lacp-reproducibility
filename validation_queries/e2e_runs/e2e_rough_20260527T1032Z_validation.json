@@ -1,0 +1,39 @@
+{
+  "jsonl": "validation_queries\\e2e_runs\\e2e_rough_20260527T1032Z.jsonl",
+  "rows_checked": 9,
+  "summary": {
+    "done_reason_counts": {},
+    "done_reason_length_rows": 0,
+    "failures": [],
+    "metric_complete_rows": 9,
+    "missing_retrieval_metadata_rows": 0,
+    "prompt_eval_over_limit_rows": 0,
+    "rag_counts": {
+      "A:True": 3,
+      "B:True": 3,
+      "C:False": 3
+    },
+    "response_empty_rows": 0,
+    "row_count": 9,
+    "sidecar_prompt_true_rows": 0,
+    "status": "pass",
+    "thinking_present_rows": 0,
+    "turn_node_coverage": {
+      "1": [
+        "A",
+        "B",
+        "C"
+      ],
+      "2": [
+        "A",
+        "B",
+        "C"
+      ],
+      "3": [
+        "A",
+        "B",
+        "C"
+      ]
+    }
+  }
+}

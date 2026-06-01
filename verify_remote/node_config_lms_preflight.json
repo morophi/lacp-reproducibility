@@ -1,0 +1,88 @@
+{
+  "nodes": {
+    "A": {
+      "url": "http://10.1.1.10:11434/api/chat",
+      "role": "rag_sc"
+    },
+    "B": {
+      "url": "http://10.1.1.20:11434/api/chat",
+      "role": "rag_only"
+    },
+    "C": {
+      "url": "http://10.1.1.30:11434/api/chat",
+      "role": "baseline"
+    }
+  },
+  "rag": {
+    "url": "http://10.1.1.120:8000",
+    "host": "10.1.1.120",
+    "port": 8000,
+    "collection": "lacp_docs_v2_table_safe_topk5",
+    "top_k": 5,
+    "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  },
+  "harness": {
+    "host": "0.0.0.0",
+    "port": 9001
+  },
+  "model": {
+    "name": "qwen3-nothink",
+    "temperature": 0.0,
+    "seed": 42,
+    "thinking": false,
+    "num_predict": 512,
+    "endpoint_by_run_mode": {
+      "smoke": "native_chat",
+      "formal": "openai_chat_completions"
+    },
+    "request_logprobs": true,
+    "top_logprobs": 5,
+    "strip_empty_think_tags": true
+  },
+  "logging": {
+    "jsonl_fallback_dir": "/home/morophi/harness/logs/runs",
+    "db": {
+      "enabled": true,
+      "require_db": false,
+      "host": "10.1.1.130",
+      "port": 3306,
+      "user": "morophi",
+      "password": "${LACP_DB_PASSWORD}",
+      "database": "lacp_db"
+    }
+  },
+  "run": {
+    "default_mode": "formal",
+    "bootstrap_first_turn": false,
+    "sc_without_rag": false
+  },
+  "run_modes": {
+    "smoke": {
+      "force_intervention_run_b": true,
+      "allow_null_metrics": true,
+      "require_metric_trigger": false
+    },
+    "formal": {
+      "force_intervention_run_b": false,
+      "allow_null_metrics": false,
+      "require_metric_trigger": true
+    }
+  },
+  "metrics": {
+    "ma": {
+      "enabled": true,
+      "include_unclassified_in_denominator": true
+    },
+    "cds": {
+      "enabled": false,
+      "embedding_model": "snunlp/KR-SBERT-V40K-klueNLI-augSTS",
+      "reference_embedding_path": "/home/morophi/harness/reference/reference_embedding.npy",
+      "reference_embedding_hash_path": "/home/morophi/harness/reference/reference_embedding.sha256"
+    },
+    "lms": {
+      "enabled": true,
+      "theta_entropy": 0.0,
+      "allow_unavailable_for_trigger": false
+    }
+  }
+}
