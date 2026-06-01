@@ -72,7 +72,7 @@
       "force_intervention_run_b": false,
       "allow_null_metrics": false,
       "require_metric_trigger": true,
-      "num_predict": 384,
+      "num_predict": 1024,
       "request_timeout_sec": 240,
       "request_logprobs": true,
       "top_logprobs": 5,

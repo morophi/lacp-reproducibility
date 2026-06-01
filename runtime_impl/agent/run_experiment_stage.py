@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import base64
 import hashlib
 import json
 import math
@@ -421,6 +422,8 @@ def sql_quote(value: str) -> str:
 def run_mysql_query(query: str) -> str:
     if not DEFAULT_DB_PASSWORD:
         raise RuntimeError("LACP_DB_PASSWORD must be set for dblog queries")
+    if shutil.which("mysql") is None:
+        return run_mysql_query_via_harness(query)
     command = [
         "mysql",
         f"-h{DEFAULT_DB_HOST}",
@@ -435,6 +438,51 @@ def run_mysql_query(query: str) -> str:
     proc = subprocess.run(command, text=True, capture_output=True, check=False)
     if proc.returncode != 0:
         raise RuntimeError(f"dblog query failed: {proc.stderr.strip()}")
+    return proc.stdout
+
+
+def run_mysql_query_via_harness(query: str) -> str:
+    query_b64 = base64.b64encode(query.encode("utf-8")).decode("ascii")
+    code = r"""
+import base64
+import os
+import pymysql
+from pymysql.constants import CLIENT
+
+query = base64.b64decode(os.environ["LACP_QUERY_B64"]).decode("utf-8")
+conn = pymysql.connect(
+    host=os.environ.get("LACP_DB_HOST", "10.1.1.130"),
+    user=os.environ.get("LACP_DB_USER", "morophi"),
+    password=os.environ["LACP_DB_PASSWORD"],
+    database=os.environ.get("LACP_DB_NAME", "lacp_db"),
+    client_flag=CLIENT.MULTI_STATEMENTS,
+)
+try:
+    with conn.cursor() as cur:
+        cur.execute(query)
+        while True:
+            if cur.description:
+                for row in cur.fetchall():
+                    print("\t".join("" if value is None else str(value) for value in row))
+            if not cur.nextset():
+                break
+    conn.commit()
+finally:
+    conn.close()
+"""
+    remote_command = (
+        f"LACP_DB_PASSWORD={shlex.quote(DEFAULT_DB_PASSWORD)} "
+        f"LACP_QUERY_B64={shlex.quote(query_b64)} "
+        f"/home/morophi/harness_venv/bin/python -c {shlex.quote(code)}"
+    )
+    proc = subprocess.run(
+        ["ssh", DEFAULT_HARNESS_HOST, remote_command],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"dblog query via harness failed: {proc.stderr.strip()}")
     return proc.stdout
 
 
