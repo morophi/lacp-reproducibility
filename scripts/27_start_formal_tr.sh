@@ -24,6 +24,9 @@ nohup bash -lc "
     --thermal-log \
     --thermal-output-dir /home/morophi/agent/validation_queries/formal_thermal \
     --thermal-cooldown-sec 30 \
+    --node-local-thermal-log \
+    --node-local-thermal-dir /home/morophi/lacp_node_thermal \
+    --node-local-thermal-interval-sec 2 \
     --segment-every 5 \
     --segment-unload-runners \
     --segment-settle-sec 10 \

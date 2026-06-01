@@ -172,6 +172,22 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--thermal-interval-sec", type=float, default=1.0, help="Thermal sampling interval during execution.")
     parser.add_argument("--thermal-cooldown-sec", type=float, default=10.0, help="Continue thermal sampling after stage completion.")
+    parser.add_argument(
+        "--node-local-thermal-log",
+        action="store_true",
+        help="Start a local thermal recorder on each inference node so crash/reboot evidence can be recovered later.",
+    )
+    parser.add_argument(
+        "--node-local-thermal-dir",
+        default="/home/morophi/lacp_node_thermal",
+        help="Persistent directory on inference nodes for local thermal JSONL logs.",
+    )
+    parser.add_argument(
+        "--node-local-thermal-interval-sec",
+        type=float,
+        default=2.0,
+        help="Sampling interval for node-local thermal recorders.",
+    )
     parser.add_argument("--turn-timeout-sec", type=float, default=300.0, help="Maximum seconds to wait for one Harness /turn call.")
     parser.add_argument("--turn-cooldown-every", type=int, default=0, help="Pause after every N scenario turns; 0 disables.")
     parser.add_argument("--turn-cooldown-sec", type=float, default=0.0, help="Cooldown seconds for --turn-cooldown-every.")
@@ -287,6 +303,89 @@ class ThermalRecorder:
             handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+class NodeLocalThermalRecorder:
+    def __init__(
+        self,
+        run_id: str,
+        nodes: tuple[tuple[str, str], ...],
+        remote_dir: str,
+        interval_sec: float,
+    ) -> None:
+        self.run_id = run_id
+        self.nodes = nodes
+        self.remote_dir = remote_dir.rstrip("/")
+        self.interval_sec = interval_sec
+        self.records: list[dict[str, object]] = []
+
+    def start(self) -> None:
+        for label, host in self.nodes:
+            remote_path = self.remote_log_path(label)
+            pid_path = self.remote_pid_path(label)
+            err_path = f"{remote_path}.stderr"
+            command = (
+                f"mkdir -p {shlex.quote(self.remote_dir)} && "
+                f"nohup python3 -u -c {shlex.quote(node_local_thermal_code())} "
+                f"{shlex.quote(self.run_id)} {shlex.quote(label)} {shlex.quote(str(self.interval_sec))} "
+                f"> {shlex.quote(remote_path)} 2> {shlex.quote(err_path)} < /dev/null & "
+                f"echo $! > {shlex.quote(pid_path)}"
+            )
+            proc = ssh(host, command, timeout=10)
+            self.records.append(
+                {
+                    "label": label,
+                    "host": host,
+                    "remote_path": remote_path,
+                    "pid_path": pid_path,
+                    "stderr_path": err_path,
+                    "started": proc.returncode == 0,
+                    "start_returncode": proc.returncode,
+                    "start_stderr": proc.stderr.strip(),
+                }
+            )
+
+    def stop(self) -> None:
+        for record in self.records:
+            host = str(record["host"])
+            pid_path = str(record["pid_path"])
+            command = (
+                f"if test -f {shlex.quote(pid_path)}; then "
+                f"kill $(cat {shlex.quote(pid_path)}) 2>/dev/null || true; "
+                f"fi"
+            )
+            proc = ssh(host, command, timeout=10)
+            record["stop_returncode"] = proc.returncode
+            record["stop_stderr"] = proc.stderr.strip()
+
+    def collect(self, output_dir: Path) -> None:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        manifest = {
+            "run_id": self.run_id,
+            "remote_dir": self.remote_dir,
+            "interval_sec": self.interval_sec,
+            "records": self.records,
+            "collected_at_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        for record in self.records:
+            label = str(record["label"])
+            host = str(record["host"])
+            for key, suffix in (("remote_path", "jsonl"), ("stderr_path", "stderr")):
+                remote_path = str(record[key])
+                local_path = output_dir / f"{self.run_id}_{label}_node_local_thermal.{suffix}"
+                proc = subprocess.run(["scp", f"{host}:{remote_path}", str(local_path)], check=False, text=True, capture_output=True)
+                record[f"collect_{suffix}_returncode"] = proc.returncode
+                record[f"collect_{suffix}_stderr"] = proc.stderr.strip()
+        (output_dir / f"{self.run_id}_node_local_thermal_manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+    def remote_log_path(self, label: str) -> str:
+        return f"{self.remote_dir}/{self.run_id}_{label}_thermal.jsonl"
+
+    def remote_pid_path(self, label: str) -> str:
+        return f"{self.remote_log_path(label)}.pid"
+
+
 def now_iso() -> str:
     return datetime.now(timezone.utc).astimezone().isoformat()
 
@@ -391,6 +490,61 @@ valid=[item['temp_c'] for item in temps if isinstance(item.get('temp_c'), (int, 
 print(json.dumps({'max_temp_c': max(valid) if valid else None, 'temperatures': temps}, ensure_ascii=False))
 """
     return "python3 -c " + shlex.quote(code)
+
+
+def node_local_thermal_code() -> str:
+    return r"""
+import glob
+import json
+import os
+import sys
+import time
+from datetime import datetime, timezone
+
+run_id = sys.argv[1]
+node = sys.argv[2]
+interval_sec = float(sys.argv[3])
+
+def read_temperatures():
+    temps = []
+    for path in sorted(glob.glob('/sys/class/hwmon/hwmon*/temp*_input')):
+        try:
+            raw = open(path, encoding='utf-8').read().strip()
+            value = float(raw)
+            temp_c = value / 1000.0 if value > 1000 else value
+            hwmon_dir = os.path.dirname(path)
+            name_path = os.path.join(hwmon_dir, 'name')
+            name = open(name_path, encoding='utf-8').read().strip() if os.path.exists(name_path) else os.path.basename(hwmon_dir)
+            label_path = path[:-6] + '_label'
+            label = open(label_path, encoding='utf-8').read().strip() if os.path.exists(label_path) else os.path.basename(path)
+            temps.append({'source': path, 'device': name, 'label': label, 'temp_c': round(temp_c, 3)})
+        except Exception as exc:
+            temps.append({'source': path, 'error': f'{type(exc).__name__}: {exc}'})
+    for path in sorted(glob.glob('/sys/class/thermal/thermal_zone*/temp')):
+        try:
+            raw = open(path, encoding='utf-8').read().strip()
+            value = float(raw)
+            temp_c = value / 1000.0 if value > 1000 else value
+            zone_dir = os.path.dirname(path)
+            type_path = os.path.join(zone_dir, 'type')
+            label = open(type_path, encoding='utf-8').read().strip() if os.path.exists(type_path) else os.path.basename(zone_dir)
+            temps.append({'source': path, 'device': 'thermal_zone', 'label': label, 'temp_c': round(temp_c, 3)})
+        except Exception as exc:
+            temps.append({'source': path, 'error': f'{type(exc).__name__}: {exc}'})
+    valid = [item['temp_c'] for item in temps if isinstance(item.get('temp_c'), (int, float))]
+    return {'max_temp_c': max(valid) if valid else None, 'temperatures': temps}
+
+while True:
+    payload = {
+        'event': 'node_local_thermal_sample',
+        'run_id': run_id,
+        'node': node,
+        'timestamp': datetime.now(timezone.utc).astimezone().isoformat(),
+    }
+    payload.update(read_temperatures())
+    print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
+    time.sleep(interval_sec)
+"""
 
 
 def make_run_id(prefix: str, repetition: int, attempt: int = 1) -> str:
@@ -585,6 +739,7 @@ def archive_failed_run_artifacts(
     args: argparse.Namespace,
     error: Exception,
     thermal_path: Optional[Path],
+    node_local_recorder: Optional[NodeLocalThermalRecorder] = None,
 ) -> Path:
     archive_root = Path(args.failed_archive_dir)
     archive_dir = archive_root / run_id
@@ -628,6 +783,8 @@ def archive_failed_run_artifacts(
     subprocess.run(["scp", remote_jsonl, str(archive_dir / f"{run_id}.jsonl")], check=False)
     if thermal_path is not None and thermal_path.exists():
         shutil.copy2(thermal_path, archive_dir / thermal_path.name)
+    if node_local_recorder is not None:
+        node_local_recorder.collect(archive_dir / "node_local_thermal")
     print(f"failed_run_artifact_archive path={archive_dir}")
     return archive_dir
 
@@ -971,10 +1128,24 @@ async def run_stage(args: argparse.Namespace) -> None:
             attempt = 1
             while True:
                 run_id = make_run_id(prefix, index, attempt)
+                node_local_recorder = None
                 print(f"stage_run_start run_id={run_id} attempt={attempt}/{args.max_run_attempts}")
                 if thermal_recorder is not None:
                     thermal_recorder.snapshot(f"pre_run_snapshot:{run_id}")
                 try:
+                    if args.node_local_thermal_log and not args.dry_run:
+                        node_local_recorder = NodeLocalThermalRecorder(
+                            run_id,
+                            thermal_nodes,
+                            args.node_local_thermal_dir,
+                            args.node_local_thermal_interval_sec,
+                        )
+                        node_local_recorder.start()
+                        print(
+                            "node_local_thermal_start "
+                            f"run_id={run_id} dir={args.node_local_thermal_dir} "
+                            f"interval_sec={args.node_local_thermal_interval_sec}"
+                        )
                     if not args.dry_run:
                         await send_scenario(
                             args.scenario,
@@ -995,6 +1166,11 @@ async def run_stage(args: argparse.Namespace) -> None:
                         )
                         if thermal_recorder is not None:
                             thermal_recorder.snapshot(f"post_run_immediate_snapshot:{run_id}")
+                        if node_local_recorder is not None:
+                            node_local_recorder.stop()
+                            node_local_output = Path(args.thermal_output_dir) / f"{run_id}_node_local"
+                            node_local_recorder.collect(node_local_output)
+                            print(f"node_local_thermal_collect path={node_local_output}")
                         if not args.skip_db_check:
                             check_db_rows(run_id, turns, spec.expected_nodes)
                     else:
@@ -1012,7 +1188,10 @@ async def run_stage(args: argparse.Namespace) -> None:
                         args,
                         exc,
                         thermal_recorder.path if thermal_recorder is not None else None,
+                        node_local_recorder,
                     )
+                    if node_local_recorder is not None:
+                        node_local_recorder.stop()
                     if not args.dry_run:
                         purge_db_run(run_id)
                     raise RuntimeError(
