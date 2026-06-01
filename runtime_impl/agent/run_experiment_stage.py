@@ -166,6 +166,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--turn-cooldown-every", type=int, default=0, help="Pause after every N scenario turns; 0 disables.")
     parser.add_argument("--turn-cooldown-sec", type=float, default=0.0, help="Cooldown seconds for --turn-cooldown-every.")
     parser.add_argument(
+        "--failure-cooldown-sec",
+        type=float,
+        default=120.0,
+        help="Cooldown seconds before retrying a run after purging failed DB rows.",
+    )
+    parser.add_argument(
+        "--max-run-attempts",
+        type=int,
+        default=2,
+        help="Maximum attempts per logical stage repetition before stopping for user/code review.",
+    )
+    parser.add_argument(
         "--thermal-nodes",
         default=DEFAULT_THERMAL_NODES,
         help="Comma-separated SSH targets to sample; use label=host to preserve node names.",
@@ -361,9 +373,10 @@ print(json.dumps({'max_temp_c': max(valid) if valid else None, 'temperatures': t
     return "python3 -c " + shlex.quote(code)
 
 
-def make_run_id(prefix: str, repetition: int) -> str:
+def make_run_id(prefix: str, repetition: int, attempt: int = 1) -> str:
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-    return f"{prefix}_{stamp}_rep{repetition:02d}"
+    suffix = f"_attempt{attempt:02d}" if attempt > 1 else ""
+    return f"{prefix}_{stamp}_rep{repetition:02d}{suffix}"
 
 
 def expected_turns(scenario: str, max_turns: Optional[int]) -> int:
@@ -440,6 +453,48 @@ def check_db_rows(run_id: str, turns: int, expected_nodes: int) -> None:
     if mismatches:
         raise RuntimeError(f"dblog row-count mismatch for {run_id}: {mismatches}")
     print(f"db_check ok run_id={run_id} turns={turns} node_rows={expected_node_rows}")
+
+
+def purge_db_run(run_id: str) -> dict[str, int]:
+    if not DEFAULT_DB_PASSWORD:
+        raise RuntimeError("LACP_DB_PASSWORD must be set for failed-run DB purge")
+    query = f"""
+START TRANSACTION;
+SELECT id INTO @run_pk FROM experiment_runs WHERE run_id = {sql_quote(run_id)} LIMIT 1;
+SELECT COUNT(*) INTO @experiment_runs_before FROM experiment_runs WHERE id = @run_pk;
+SELECT COUNT(*) INTO @turn_node_logs_before FROM turn_node_logs WHERE experiment_run_id = @run_pk;
+SELECT COUNT(*) INTO @payload_audit_logs_before
+FROM payload_audit_logs p JOIN turn_node_logs t ON t.id = p.turn_node_log_id
+WHERE t.experiment_run_id = @run_pk;
+SELECT COUNT(*) INTO @intervention_logs_before
+FROM intervention_logs i JOIN turn_node_logs t ON t.id = i.turn_node_log_id
+WHERE t.experiment_run_id = @run_pk;
+SELECT COUNT(*) INTO @metric_logs_before
+FROM metric_logs m JOIN turn_node_logs t ON t.id = m.turn_node_log_id
+WHERE t.experiment_run_id = @run_pk;
+DELETE p FROM payload_audit_logs p JOIN turn_node_logs t ON t.id = p.turn_node_log_id
+WHERE t.experiment_run_id = @run_pk;
+DELETE i FROM intervention_logs i JOIN turn_node_logs t ON t.id = i.turn_node_log_id
+WHERE t.experiment_run_id = @run_pk;
+DELETE m FROM metric_logs m JOIN turn_node_logs t ON t.id = m.turn_node_log_id
+WHERE t.experiment_run_id = @run_pk;
+DELETE FROM turn_node_logs WHERE experiment_run_id = @run_pk;
+DELETE FROM experiment_runs WHERE id = @run_pk;
+COMMIT;
+SELECT 'experiment_runs', @experiment_runs_before
+UNION ALL SELECT 'turn_node_logs', @turn_node_logs_before
+UNION ALL SELECT 'payload_audit_logs', @payload_audit_logs_before
+UNION ALL SELECT 'intervention_logs', @intervention_logs_before
+UNION ALL SELECT 'metric_logs', @metric_logs_before;
+"""
+    counts: dict[str, int] = {}
+    for line in run_mysql_query(query).splitlines():
+        if not line.strip():
+            continue
+        table, value = line.split("\t", 1)
+        counts[table] = int(value)
+    print(f"db_purge_done run_id={run_id} removed={json.dumps(counts, sort_keys=True)}")
+    return counts
 
 
 def percentile(values: list[float], pct: float) -> float:
@@ -777,30 +832,52 @@ async def run_stage(args: argparse.Namespace) -> None:
     try:
         run_ids = []
         for index in range(1, repetitions + 1):
-            run_id = make_run_id(prefix, index)
-            run_ids.append(run_id)
-            print(f"stage_run_start run_id={run_id}")
-            if thermal_recorder is not None:
-                thermal_recorder.snapshot(f"pre_run_snapshot:{run_id}")
-            if not args.dry_run:
-                await send_scenario(
-                    args.scenario,
-                    args.harness_url,
-                    run_id,
-                    condition,
-                    run_mode,
-                    max_turns=max_turns,
-                    turn_cooldown_every=args.turn_cooldown_every or None,
-                    turn_cooldown_sec=args.turn_cooldown_sec,
-                )
+            attempt = 1
+            while True:
+                run_id = make_run_id(prefix, index, attempt)
+                print(f"stage_run_start run_id={run_id} attempt={attempt}/{args.max_run_attempts}")
                 if thermal_recorder is not None:
-                    thermal_recorder.snapshot(f"post_run_immediate_snapshot:{run_id}")
-                if not args.skip_db_check:
-                    check_db_rows(run_id, turns, spec.expected_nodes)
-            else:
-                if thermal_recorder is not None:
-                    thermal_recorder.snapshot(f"dry_run_post_plan_snapshot:{run_id}")
-            print(f"stage_run_done run_id={run_id}")
+                    thermal_recorder.snapshot(f"pre_run_snapshot:{run_id}")
+                try:
+                    if not args.dry_run:
+                        await send_scenario(
+                            args.scenario,
+                            args.harness_url,
+                            run_id,
+                            condition,
+                            run_mode,
+                            max_turns=max_turns,
+                            turn_cooldown_every=args.turn_cooldown_every or None,
+                            turn_cooldown_sec=args.turn_cooldown_sec,
+                        )
+                        if thermal_recorder is not None:
+                            thermal_recorder.snapshot(f"post_run_immediate_snapshot:{run_id}")
+                        if not args.skip_db_check:
+                            check_db_rows(run_id, turns, spec.expected_nodes)
+                    else:
+                        if thermal_recorder is not None:
+                            thermal_recorder.snapshot(f"dry_run_post_plan_snapshot:{run_id}")
+                    run_ids.append(run_id)
+                    print(f"stage_run_done run_id={run_id}")
+                    break
+                except Exception as exc:
+                    print(f"stage_run_failed run_id={run_id} attempt={attempt} error={exc}")
+                    if thermal_recorder is not None:
+                        thermal_recorder.snapshot(f"failed_run_snapshot:{run_id}")
+                    if not args.dry_run:
+                        purge_db_run(run_id)
+                    if attempt >= args.max_run_attempts:
+                        raise RuntimeError(
+                            "stage repetition failed after automatic retry budget; "
+                            "code or environment review is required before another run"
+                        ) from exc
+                    print(
+                        "stage_run_retry_cooldown_start "
+                        f"run_id={run_id} seconds={args.failure_cooldown_sec}"
+                    )
+                    await asyncio.sleep(args.failure_cooldown_sec)
+                    print(f"stage_run_retry_cooldown_done run_id={run_id}")
+                    attempt += 1
 
         if args.stage == "cr2" and not args.dry_run and not args.skip_theta_freeze:
             freeze_theta_after_cr2(args, run_ids, turns, repetitions)
