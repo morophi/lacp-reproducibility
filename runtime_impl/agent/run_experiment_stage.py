@@ -184,13 +184,13 @@ def parse_args() -> argparse.Namespace:
         "--failure-cooldown-sec",
         type=float,
         default=120.0,
-        help="Cooldown seconds before retrying a run after purging failed DB rows.",
+        help="Reserved cooldown seconds for manually approved retry workflows.",
     )
     parser.add_argument(
         "--max-run-attempts",
         type=int,
-        default=2,
-        help="Maximum attempts per logical stage repetition before stopping for user/code review.",
+        default=1,
+        help="Maximum attempts per logical stage repetition. Formal failures stop for user/code review by default.",
     )
     parser.add_argument(
         "--thermal-nodes",
@@ -967,18 +967,10 @@ async def run_stage(args: argparse.Namespace) -> None:
                     )
                     if not args.dry_run:
                         purge_db_run(run_id)
-                    if attempt >= args.max_run_attempts:
-                        raise RuntimeError(
-                            "stage repetition failed after automatic retry budget; "
-                            "code or environment review is required before another run"
-                        ) from exc
-                    print(
-                        "stage_run_retry_cooldown_start "
-                        f"run_id={run_id} seconds={args.failure_cooldown_sec}"
-                    )
-                    await asyncio.sleep(args.failure_cooldown_sec)
-                    print(f"stage_run_retry_cooldown_done run_id={run_id}")
-                    attempt += 1
+                    raise RuntimeError(
+                        "stage run failed; file artifacts were archived and failed DB rows were purged. "
+                        "User confirmation is required before any new run attempt."
+                    ) from exc
 
         if args.stage == "cr2" and not args.dry_run and not args.skip_theta_freeze:
             freeze_theta_after_cr2(args, run_ids, turns, repetitions)
