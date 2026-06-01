@@ -52,6 +52,8 @@ async def send_scenario(
     run_mode: str | None = None,
     max_turns: int | None = None,
     flush_at_end: bool = True,
+    turn_cooldown_every: int | None = None,
+    turn_cooldown_sec: float = 0.0,
 ) -> None:
     scenario = load_scenario(scenario_path)
     endpoint = harness_url.rstrip("/") + "/turn"
@@ -74,6 +76,16 @@ async def send_scenario(
 
         completed = ",".join(data.get("nodes_completed", []))
         print(f"ack turn={turn_no} nodes_completed={completed}")
+        if (
+            turn_cooldown_every is not None
+            and turn_cooldown_every > 0
+            and turn_cooldown_sec > 0
+            and turn_no % turn_cooldown_every == 0
+            and turn is not turns[-1]
+        ):
+            print(f"turn_cooldown_start after_turn={turn_no} seconds={turn_cooldown_sec}")
+            await asyncio.sleep(turn_cooldown_sec)
+            print(f"turn_cooldown_done after_turn={turn_no}")
         await asyncio.sleep(0)
 
     if flush_at_end:

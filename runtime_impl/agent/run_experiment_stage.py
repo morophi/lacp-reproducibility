@@ -136,6 +136,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stage", required=True, choices=sorted(STAGES), help="Experiment stage to run.")
     parser.add_argument("--scenario", default=DEFAULT_SCENARIO, help="Scenario JSON path on the agent node.")
     parser.add_argument("--harness-url", default=DEFAULT_HARNESS_URL, help="Harness base URL.")
+    parser.add_argument("--condition", default=None, help="Override stage condition sent to Harness.")
+    parser.add_argument("--run-mode", default=None, help="Override stage run_mode sent to Harness.")
     parser.add_argument("--run-id-prefix", default=None, help="Override run_id prefix.")
     parser.add_argument("--repetitions", type=int, default=None, help="Override stage repetition count.")
     parser.add_argument("--max-turns", type=int, default=None, help="Override max turns per run.")
@@ -161,6 +163,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--thermal-output-dir", default=DEFAULT_THERMAL_OUTPUT_DIR, help="Directory for thermal JSONL artifacts.")
     parser.add_argument("--thermal-interval-sec", type=float, default=1.0, help="Thermal sampling interval during execution.")
     parser.add_argument("--thermal-cooldown-sec", type=float, default=10.0, help="Continue thermal sampling after stage completion.")
+    parser.add_argument("--turn-cooldown-every", type=int, default=0, help="Pause after every N scenario turns; 0 disables.")
+    parser.add_argument("--turn-cooldown-sec", type=float, default=0.0, help="Cooldown seconds for --turn-cooldown-every.")
     parser.add_argument(
         "--thermal-nodes",
         default=DEFAULT_THERMAL_NODES,
@@ -740,6 +744,8 @@ async def run_stage(args: argparse.Namespace) -> None:
     if repetitions < 1:
         raise ValueError("--repetitions must be >= 1")
     max_turns = None if args.full_scenario else (args.max_turns if args.max_turns is not None else spec.max_turns)
+    condition = args.condition or spec.condition
+    run_mode = args.run_mode or spec.run_mode
     prefix = args.run_id_prefix or spec.run_id_prefix
     turns = expected_turns(args.scenario, max_turns)
     thermal_nodes = parse_thermal_nodes(args.thermal_nodes)
@@ -758,7 +764,7 @@ async def run_stage(args: argparse.Namespace) -> None:
 
     print(
         "stage_plan "
-        f"stage={args.stage} condition={spec.condition} run_mode={spec.run_mode} "
+        f"stage={args.stage} condition={condition} run_mode={run_mode} "
         f"repetitions={repetitions} turns_per_run={turns} causal_evidence={spec.causal_evidence}"
     )
     if thermal_recorder is not None:
@@ -781,9 +787,11 @@ async def run_stage(args: argparse.Namespace) -> None:
                     args.scenario,
                     args.harness_url,
                     run_id,
-                    spec.condition,
-                    spec.run_mode,
+                    condition,
+                    run_mode,
                     max_turns=max_turns,
+                    turn_cooldown_every=args.turn_cooldown_every or None,
+                    turn_cooldown_sec=args.turn_cooldown_sec,
                 )
                 if thermal_recorder is not None:
                     thermal_recorder.snapshot(f"post_run_immediate_snapshot:{run_id}")
