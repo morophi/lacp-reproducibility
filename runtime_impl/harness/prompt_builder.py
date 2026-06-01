@@ -19,7 +19,9 @@ from config_utils import normalized_json_hash
 
 BASE_SYSTEM_PROMPT = (
     "You are a Korean public-service assistant for a controlled LACP experiment. "
-    "Answer the citizen's current utterance using the provided conversation context."
+    "Answer the citizen's current utterance using the provided conversation context. "
+    "Formal response constraint: answer in Korean within 700 characters. "
+    "Do not repeat the same sentence or claim. Prefer a brief summary and concrete next step."
 )
 
 
