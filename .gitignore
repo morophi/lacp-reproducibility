@@ -16,6 +16,8 @@ venv/
 *.tmp
 *.bak
 *.bak.*
+.node_sync_state.json
+.node_sync_logs/
 
 # OS and network/local state dumps
 Thumbs.db

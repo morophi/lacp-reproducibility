@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "state_file": ".node_sync_state.json",
+  "nodes": [
+    {
+      "name": "jump",
+      "host": "jump",
+      "targets": [
+        {
+          "kind": "tree",
+          "remote_root": "/home/morophi/agent",
+          "local_root": "runtime_impl/agent",
+          "include_names": ["*.py"],
+          "exclude_paths": ["*/__pycache__/*", "*/.venv/*"]
+        },
+        {
+          "kind": "tree",
+          "remote_root": "/home/morophi/agent/scenario",
+          "local_root": "runtime_impl/agent/scenario",
+          "include_names": ["*.json", "*.jsonl"],
+          "exclude_paths": []
+        }
+      ]
+    },
+    {
+      "name": "harness",
+      "host": "harness",
+      "targets": [
+        {
+          "kind": "tree",
+          "remote_root": "/home/morophi/harness",
+          "local_root": "runtime_impl/harness",
+          "include_names": ["*.py", "*.md", "requirements.txt"],
+          "exclude_paths": ["*/__pycache__/*", "*/.venv/*", "*/harness_venv/*", "*/logs/*"]
+        },
+        {
+          "kind": "tree",
+          "remote_root": "/home/morophi/harness/config",
+          "local_root": "runtime_impl/harness/config",
+          "include_names": ["*.yaml", "*.yml", "*.json"],
+          "exclude_paths": []
+        }
+      ]
+    },
+    {
+      "name": "rag",
+      "host": "rag",
+      "targets": [
+        {
+          "kind": "tree",
+          "remote_root": "/home/morophi/lacp_rag_ingest/scripts",
+          "local_root": "scripts",
+          "include_names": ["*.py", "*.md"],
+          "exclude_paths": ["*/__pycache__/*", "*/.venv/*"]
+        },
+        {
+          "kind": "tree",
+          "remote_root": "/home/morophi/lacp_rag_ingest/verify_remote",
+          "local_root": "verify_remote",
+          "include_names": ["*.py", "*.sql", "*.json"],
+          "exclude_paths": ["*/__pycache__/*", "*/chromadb_data/*", "*/logs/*"]
+        }
+      ]
+    },
+    {
+      "name": "dblog",
+      "host": "dblog",
+      "targets": [
+        {
+          "kind": "tree",
+          "remote_root": "/home/morophi/dblog/schema",
+          "local_root": "dblog_schema",
+          "include_names": ["*.sql", "*.sh"],
+          "exclude_paths": ["*/logs/*", "*/.venv/*"]
+        }
+      ]
+    },
+    {
+      "name": "inference1",
+      "host": "inference1",
+      "targets": [
+        {
+          "kind": "files",
+          "files": [
+            {"remote": "/home/morophi/Modelfile", "local": "inference_nodes/inference1/Modelfile"},
+            {"remote": "/home/morophi/node_temp.py", "local": "inference_nodes/inference1/node_temp.py"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inference2",
+      "host": "inference2",
+      "targets": [
+        {
+          "kind": "files",
+          "files": [
+            {"remote": "/home/morophi/Modelfile", "local": "inference_nodes/inference2/Modelfile"},
+            {"remote": "/home/morophi/node_temp.py", "local": "inference_nodes/inference2/node_temp.py"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inference3",
+      "host": "inference3",
+      "targets": [
+        {
+          "kind": "files",
+          "files": [
+            {"remote": "/home/morophi/Modelfile", "local": "inference_nodes/inference3/Modelfile"},
+            {"remote": "/home/morophi/node_temp.py", "local": "inference_nodes/inference3/node_temp.py"}
+          ]
+        }
+      ]
+    }
+  ]
+}
