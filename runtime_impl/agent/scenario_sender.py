@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import socket
 import urllib.error
 import urllib.request
 from typing import Any, Dict, Optional
@@ -54,6 +55,7 @@ async def send_scenario(
     flush_at_end: bool = True,
     turn_cooldown_every: int | None = None,
     turn_cooldown_sec: float = 0.0,
+    turn_timeout_sec: float | None = 300.0,
 ) -> None:
     scenario = load_scenario(scenario_path)
     endpoint = harness_url.rstrip("/") + "/turn"
@@ -70,7 +72,7 @@ async def send_scenario(
         turn_no = payload["turn_no"]
         print(f"send turn={turn_no} endpoint={endpoint}")
 
-        status, data = await asyncio.to_thread(_post_json, endpoint, payload)
+        status, data = await asyncio.to_thread(_post_json, endpoint, payload, turn_timeout_sec)
         if status >= 400 or not data.get("ok"):
             raise RuntimeError(f"Harness rejected turn {turn_no}: status={status} response={data}")
 
@@ -89,7 +91,7 @@ async def send_scenario(
         await asyncio.sleep(0)
 
     if flush_at_end:
-        status, data = await asyncio.to_thread(_post_json, flush_endpoint, {})
+        status, data = await asyncio.to_thread(_post_json, flush_endpoint, {}, 30.0)
         if status == 404:
             print("flush endpoint unavailable; continuing with legacy harness behavior")
             return
@@ -98,7 +100,7 @@ async def send_scenario(
         print("log_flush ok")
 
 
-def _post_json(endpoint: str, payload: Dict[str, Any]) -> tuple[int, Dict[str, Any]]:
+def _post_json(endpoint: str, payload: Dict[str, Any], timeout_sec: float | None) -> tuple[int, Dict[str, Any]]:
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     request = urllib.request.Request(
         endpoint,
@@ -107,9 +109,13 @@ def _post_json(endpoint: str, payload: Dict[str, Any]) -> tuple[int, Dict[str, A
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=None) as response:
+        with urllib.request.urlopen(request, timeout=timeout_sec) as response:
             text = response.read().decode("utf-8")
             return response.status, json.loads(text)
+    except socket.timeout:
+        return 599, {"ok": False, "error": f"request timed out after {timeout_sec} seconds"}
+    except TimeoutError:
+        return 599, {"ok": False, "error": f"request timed out after {timeout_sec} seconds"}
     except urllib.error.HTTPError as exc:
         text = exc.read().decode("utf-8", errors="replace")
         try:
@@ -117,3 +123,5 @@ def _post_json(endpoint: str, payload: Dict[str, Any]) -> tuple[int, Dict[str, A
         except Exception:
             data = {"ok": False, "error": text}
         return exc.code, data
+    except urllib.error.URLError as exc:
+        return 599, {"ok": False, "error": str(exc.reason)}

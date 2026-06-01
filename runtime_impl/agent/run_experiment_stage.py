@@ -163,6 +163,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--thermal-output-dir", default=DEFAULT_THERMAL_OUTPUT_DIR, help="Directory for thermal JSONL artifacts.")
     parser.add_argument("--thermal-interval-sec", type=float, default=1.0, help="Thermal sampling interval during execution.")
     parser.add_argument("--thermal-cooldown-sec", type=float, default=10.0, help="Continue thermal sampling after stage completion.")
+    parser.add_argument("--turn-timeout-sec", type=float, default=300.0, help="Maximum seconds to wait for one Harness /turn call.")
     parser.add_argument("--turn-cooldown-every", type=int, default=0, help="Pause after every N scenario turns; 0 disables.")
     parser.add_argument("--turn-cooldown-sec", type=float, default=0.0, help="Cooldown seconds for --turn-cooldown-every.")
     parser.add_argument(
@@ -849,6 +850,7 @@ async def run_stage(args: argparse.Namespace) -> None:
                             max_turns=max_turns,
                             turn_cooldown_every=args.turn_cooldown_every or None,
                             turn_cooldown_sec=args.turn_cooldown_sec,
+                            turn_timeout_sec=args.turn_timeout_sec,
                         )
                         if thermal_recorder is not None:
                             thermal_recorder.snapshot(f"post_run_immediate_snapshot:{run_id}")
