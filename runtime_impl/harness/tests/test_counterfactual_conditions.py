@@ -98,7 +98,8 @@ def test_formal_run_b_requires_locked_theta():
         runner()._validate_theta_lock("run_b", "formal")
 
 
-def test_formal_cr_and_cr2_allow_unlocked_theta():
+def test_formal_tr_cr_and_cr2_allow_unlocked_theta():
+    runner()._validate_theta_lock("tr", "formal")
     runner()._validate_theta_lock("cr", "formal")
     runner()._validate_theta_lock("cr2", "formal")
 

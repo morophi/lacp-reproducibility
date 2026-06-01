@@ -29,7 +29,7 @@ from sc_policy import SCPolicyEngine, TriggerDecision
 from trigger_controller import TriggerController
 
 
-VALID_CONDITIONS = {"run_b", "cf_a", "cf_b", "cf_c", "cf_d", "cf_e", "cf_f", "cr", "cr2"}
+VALID_CONDITIONS = {"tr", "run_b", "cf_a", "cf_b", "cf_c", "cf_d", "cf_e", "cf_f", "cr", "cr2"}
 THETA_LOCK_REQUIRED_CONDITIONS = {"run_b", "cf_a", "cf_b", "cf_c", "cf_d", "cf_e", "cf_f"}
 
 
@@ -225,7 +225,7 @@ class ExperimentRunner:
             "C": {"rag_chunks": [], "sc_policy_block": None, "trigger": empty_trigger},
         }
 
-        if condition in {"cr", "cr2"}:
+        if condition in {"tr", "cr", "cr2"}:
             return plan
 
         if condition == "run_b":

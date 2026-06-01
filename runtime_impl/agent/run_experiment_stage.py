@@ -58,10 +58,10 @@ class StageSpec:
 
 STAGES = {
     "tr": StageSpec(
-        condition="run_b",
-        run_mode="smoke",
-        repetitions=3,
-        max_turns=2,
+        condition="tr",
+        run_mode="formal",
+        repetitions=1,
+        max_turns=None,
         run_id_prefix="tr",
         causal_evidence=False,
     ),
