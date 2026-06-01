@@ -70,7 +70,8 @@
     "formal": {
       "force_intervention_run_b": false,
       "allow_null_metrics": false,
-      "require_metric_trigger": true
+      "require_metric_trigger": true,
+      "num_predict": 768
     }
   },
   "counterfactual": {
