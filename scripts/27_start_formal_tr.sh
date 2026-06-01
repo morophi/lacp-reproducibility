@@ -24,8 +24,10 @@ nohup bash -lc "
     --thermal-log \
     --thermal-output-dir /home/morophi/agent/validation_queries/formal_thermal \
     --thermal-cooldown-sec 30 \
-    --turn-cooldown-every 5 \
-    --turn-cooldown-sec 30
+    --segment-every 5 \
+    --segment-unload-runners \
+    --segment-settle-sec 10 \
+    --segment-cooldown-sec 30
   echo \$? > '${status}'
 " > "${log}" 2>&1 &
 

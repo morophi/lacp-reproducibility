@@ -45,6 +45,7 @@ DEFAULT_TRIGGER_PERCENTILE = 0.95
 DEFAULT_THERMAL_OUTPUT_DIR = "/home/morophi/agent/validation_queries/formal_thermal"
 DEFAULT_THERMAL_NODES = "inference1=10.1.1.10,inference2=10.1.1.20,inference3=10.1.1.30"
 DEFAULT_FAILED_ARCHIVE_DIR = "/home/morophi/agent/validation_queries/failed_runs"
+DEFAULT_INFERENCE_HOSTS = "10.1.1.10,10.1.1.20,10.1.1.30"
 
 
 @dataclass(frozen=True)
@@ -173,6 +174,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--turn-timeout-sec", type=float, default=300.0, help="Maximum seconds to wait for one Harness /turn call.")
     parser.add_argument("--turn-cooldown-every", type=int, default=0, help="Pause after every N scenario turns; 0 disables.")
     parser.add_argument("--turn-cooldown-sec", type=float, default=0.0, help="Cooldown seconds for --turn-cooldown-every.")
+    parser.add_argument("--segment-every", type=int, default=0, help="Run a segment boundary hook after every N turns; 0 disables.")
+    parser.add_argument("--segment-cooldown-sec", type=float, default=0.0, help="Cooldown seconds at each segment boundary.")
+    parser.add_argument("--segment-settle-sec", type=float, default=0.0, help="Settle seconds after segment runner unload.")
+    parser.add_argument("--segment-unload-runners", action="store_true", help="Request Ollama keep_alive=0 unload at segment boundaries.")
+    parser.add_argument("--segment-unload-timeout-sec", type=float, default=30.0, help="Timeout seconds for each segment unload request.")
+    parser.add_argument("--inference-hosts", default=DEFAULT_INFERENCE_HOSTS, help="Comma-separated inference host IPs for segment runner unload.")
     parser.add_argument(
         "--failure-cooldown-sec",
         type=float,
@@ -325,6 +332,10 @@ def parse_thermal_nodes(raw: str) -> tuple[tuple[str, str], ...]:
         else:
             nodes.append((value, value))
     return tuple((label, host) for label, host in nodes if label and host)
+
+
+def parse_inference_hosts(raw: str) -> tuple[str, ...]:
+    return tuple(item.strip() for item in raw.split(",") if item.strip())
 
 
 def sample_thermal_node(run_id: str, event: str, node: str, ssh_host: str) -> dict[str, object]:
@@ -880,6 +891,7 @@ async def run_stage(args: argparse.Namespace) -> None:
     prefix = args.run_id_prefix or spec.run_id_prefix
     turns = expected_turns(args.scenario, max_turns)
     thermal_nodes = parse_thermal_nodes(args.thermal_nodes)
+    inference_hosts = parse_inference_hosts(args.inference_hosts)
     thermal_recorder = None
     if args.thermal_log:
         if not thermal_nodes:
@@ -926,6 +938,12 @@ async def run_stage(args: argparse.Namespace) -> None:
                             turn_cooldown_every=args.turn_cooldown_every or None,
                             turn_cooldown_sec=args.turn_cooldown_sec,
                             turn_timeout_sec=args.turn_timeout_sec,
+                            segment_every=args.segment_every or None,
+                            segment_cooldown_sec=args.segment_cooldown_sec,
+                            segment_unload_runners=args.segment_unload_runners,
+                            segment_settle_sec=args.segment_settle_sec,
+                            segment_unload_timeout_sec=args.segment_unload_timeout_sec,
+                            inference_hosts=inference_hosts,
                         )
                         if thermal_recorder is not None:
                             thermal_recorder.snapshot(f"post_run_immediate_snapshot:{run_id}")

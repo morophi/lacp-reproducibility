@@ -17,7 +17,7 @@ import json
 import socket
 import urllib.error
 import urllib.request
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence
 
 from scenario_loader import load_scenario
 
@@ -56,6 +56,13 @@ async def send_scenario(
     turn_cooldown_every: int | None = None,
     turn_cooldown_sec: float = 0.0,
     turn_timeout_sec: float | None = 300.0,
+    segment_every: int | None = None,
+    segment_cooldown_sec: float = 0.0,
+    segment_unload_runners: bool = False,
+    segment_settle_sec: float = 0.0,
+    segment_unload_timeout_sec: float = 30.0,
+    inference_hosts: Sequence[str] | None = None,
+    model_name: str = "qwen3-nothink",
 ) -> None:
     scenario = load_scenario(scenario_path)
     endpoint = harness_url.rstrip("/") + "/turn"
@@ -88,6 +95,22 @@ async def send_scenario(
             print(f"turn_cooldown_start after_turn={turn_no} seconds={turn_cooldown_sec}")
             await asyncio.sleep(turn_cooldown_sec)
             print(f"turn_cooldown_done after_turn={turn_no}")
+        if (
+            segment_every is not None
+            and segment_every > 0
+            and turn_no % segment_every == 0
+            and turn is not turns[-1]
+        ):
+            await _segment_boundary(
+                after_turn=turn_no,
+                flush_endpoint=flush_endpoint,
+                cooldown_sec=segment_cooldown_sec,
+                unload_runners=segment_unload_runners,
+                settle_sec=segment_settle_sec,
+                unload_timeout_sec=segment_unload_timeout_sec,
+                inference_hosts=inference_hosts or (),
+                model_name=model_name,
+            )
         await asyncio.sleep(0)
 
     if flush_at_end:
@@ -98,6 +121,72 @@ async def send_scenario(
         if status >= 400 or not data.get("ok"):
             raise RuntimeError(f"Harness log flush failed: status={status} response={data}")
         print("log_flush ok")
+
+
+async def _segment_boundary(
+    after_turn: int,
+    flush_endpoint: str,
+    cooldown_sec: float,
+    unload_runners: bool,
+    settle_sec: float,
+    unload_timeout_sec: float,
+    inference_hosts: Sequence[str],
+    model_name: str,
+) -> None:
+    print(f"segment_boundary_start after_turn={after_turn}")
+    status, data = await asyncio.to_thread(_post_json, flush_endpoint, {}, 30.0)
+    if status == 404:
+        print(f"segment_flush_unavailable after_turn={after_turn}")
+    elif status >= 400 or not data.get("ok"):
+        raise RuntimeError(f"Harness segment flush failed after turn {after_turn}: status={status} response={data}")
+    else:
+        print(f"segment_flush_ok after_turn={after_turn}")
+
+    if unload_runners:
+        await _unload_inference_runners(inference_hosts, model_name, unload_timeout_sec, after_turn)
+
+    if settle_sec > 0:
+        print(f"segment_settle_start after_turn={after_turn} seconds={settle_sec}")
+        await asyncio.sleep(settle_sec)
+        print(f"segment_settle_done after_turn={after_turn}")
+
+    if cooldown_sec > 0:
+        print(f"segment_cooldown_start after_turn={after_turn} seconds={cooldown_sec}")
+        await asyncio.sleep(cooldown_sec)
+        print(f"segment_cooldown_done after_turn={after_turn}")
+    print(f"segment_boundary_done after_turn={after_turn}")
+
+
+async def _unload_inference_runners(
+    inference_hosts: Sequence[str],
+    model_name: str,
+    timeout_sec: float,
+    after_turn: int,
+) -> None:
+    if not inference_hosts:
+        raise RuntimeError("--segment-unload-runners requires at least one inference host")
+    tasks = [
+        asyncio.to_thread(_post_json, f"http://{host}:11434/api/generate", _unload_payload(model_name), timeout_sec)
+        for host in inference_hosts
+    ]
+    rows = await asyncio.gather(*tasks)
+    failed = []
+    for host, (status, data) in zip(inference_hosts, rows):
+        if status >= 400:
+            failed.append(f"{host}:status={status}:response={data}")
+        else:
+            print(f"segment_unload_ok after_turn={after_turn} host={host} status={status}")
+    if failed:
+        raise RuntimeError(f"inference runner unload failed after turn {after_turn}: {', '.join(failed)}")
+
+
+def _unload_payload(model_name: str) -> Dict[str, Any]:
+    return {
+        "model": model_name,
+        "prompt": "",
+        "stream": False,
+        "keep_alive": 0,
+    }
 
 
 def _post_json(endpoint: str, payload: Dict[str, Any], timeout_sec: float | None) -> tuple[int, Dict[str, Any]]:
