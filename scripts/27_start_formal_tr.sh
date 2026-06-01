@@ -27,6 +27,11 @@ nohup bash -lc "
     --node-local-thermal-log \
     --node-local-thermal-dir /home/morophi/lacp_node_thermal \
     --node-local-thermal-interval-sec 2 \
+    --pre-run-unload-runners \
+    --pre-run-settle-sec 20 \
+    --pre-run-readiness-probe \
+    --pre-run-readiness-timeout-sec 90 \
+    --pre-run-readiness-max-tokens 64 \
     --segment-every 5 \
     --segment-unload-runners \
     --segment-settle-sec 10 \

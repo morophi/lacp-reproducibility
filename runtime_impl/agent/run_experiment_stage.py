@@ -22,6 +22,8 @@ import shutil
 import subprocess
 import threading
 import time
+import urllib.error
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -197,6 +199,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--segment-unload-runners", action="store_true", help="Request Ollama keep_alive=0 unload at segment boundaries.")
     parser.add_argument("--segment-unload-timeout-sec", type=float, default=30.0, help="Timeout seconds for each segment unload request.")
     parser.add_argument("--inference-hosts", default=DEFAULT_INFERENCE_HOSTS, help="Comma-separated inference host IPs for segment runner unload.")
+    parser.add_argument("--pre-run-unload-runners", action="store_true", help="Unload inference runners before each formal run starts.")
+    parser.add_argument("--pre-run-settle-sec", type=float, default=20.0, help="Settle seconds after pre-run runner unload.")
+    parser.add_argument("--pre-run-readiness-probe", action="store_true", help="Run a DB-free direct inference probe on each inference node before the run.")
+    parser.add_argument("--pre-run-readiness-timeout-sec", type=float, default=90.0, help="Timeout seconds for each pre-run readiness probe.")
+    parser.add_argument("--pre-run-readiness-max-tokens", type=int, default=64, help="Max tokens for each pre-run readiness probe.")
     parser.add_argument(
         "--failure-cooldown-sec",
         type=float,
@@ -545,6 +552,128 @@ while True:
     print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
     time.sleep(interval_sec)
 """
+
+
+def direct_post_json(endpoint: str, payload: dict[str, object], timeout_sec: float) -> tuple[int, dict[str, object], str]:
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    request = urllib.request.Request(
+        endpoint,
+        data=body,
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout_sec) as response:
+            text = response.read().decode("utf-8", errors="replace")
+            try:
+                data = json.loads(text)
+            except Exception:
+                data = {"raw_text": text}
+            return response.status, data, text[:500]
+    except urllib.error.HTTPError as exc:
+        text = exc.read().decode("utf-8", errors="replace")
+        try:
+            data = json.loads(text)
+        except Exception:
+            data = {"raw_text": text}
+        return exc.code, data, text[:500]
+    except Exception as exc:
+        return 599, {"error": f"{type(exc).__name__}: {exc}"}, ""
+
+
+def unload_inference_runners(hosts: tuple[str, ...], model_name: str, timeout_sec: float, label: str) -> None:
+    if not hosts:
+        raise RuntimeError("pre-run runner unload requires at least one inference host")
+    payload = {"model": model_name, "prompt": "", "stream": False, "keep_alive": 0}
+    failed = []
+    with ThreadPoolExecutor(max_workers=max(1, len(hosts))) as executor:
+        futures = {
+            executor.submit(direct_post_json, f"http://{host}:11434/api/generate", payload, timeout_sec): host
+            for host in hosts
+        }
+        for future in as_completed(futures):
+            host = futures[future]
+            status, data, _text = future.result()
+            if status >= 400:
+                failed.append(f"{host}:status={status}:response={data}")
+            else:
+                print(f"{label}_unload_ok host={host} status={status}")
+    if failed:
+        raise RuntimeError(f"{label} inference runner unload failed: {', '.join(failed)}")
+
+
+def readiness_probe_inference_nodes(
+    hosts: tuple[str, ...],
+    model_name: str,
+    timeout_sec: float,
+    max_tokens: int,
+) -> None:
+    if not hosts:
+        raise RuntimeError("pre-run readiness probe requires at least one inference host")
+    payload = {
+        "model": model_name,
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a readiness probe. Reply in Korean with exactly one short sentence.",
+            },
+            {"role": "user", "content": "준비 상태를 한 문장으로만 확인하세요."},
+        ],
+        "temperature": 0.0,
+        "seed": 42,
+        "max_tokens": int(max_tokens),
+        "logprobs": True,
+        "top_logprobs": 5,
+        "think": False,
+    }
+    failed = []
+    with ThreadPoolExecutor(max_workers=max(1, len(hosts))) as executor:
+        futures = {
+            executor.submit(
+                direct_post_json,
+                f"http://{host}:11434/v1/chat/completions",
+                payload,
+                timeout_sec,
+            ): host
+            for host in hosts
+        }
+        for future in as_completed(futures):
+            host = futures[future]
+            status, data, text_prefix = future.result()
+            choices = data.get("choices") if isinstance(data, dict) else None
+            choice = choices[0] if isinstance(choices, list) and choices else {}
+            finish_reason = choice.get("finish_reason") if isinstance(choice, dict) else None
+            if status >= 400 or not choices:
+                failed.append(f"{host}:status={status}:finish={finish_reason}:response={data or text_prefix}")
+            else:
+                print(f"pre_run_readiness_ok host={host} status={status} finish_reason={finish_reason}")
+    if failed:
+        raise RuntimeError(f"pre-run readiness probe failed: {', '.join(failed)}")
+
+
+def pre_run_readiness_gate(args: argparse.Namespace, inference_hosts: tuple[str, ...]) -> None:
+    if not args.pre_run_unload_runners and not args.pre_run_readiness_probe:
+        return
+    print("pre_run_gate_start")
+    if args.pre_run_unload_runners:
+        unload_inference_runners(
+            inference_hosts,
+            "qwen3-nothink",
+            args.segment_unload_timeout_sec,
+            "pre_run",
+        )
+    if args.pre_run_settle_sec > 0:
+        print(f"pre_run_settle_start seconds={args.pre_run_settle_sec}")
+        time.sleep(args.pre_run_settle_sec)
+        print("pre_run_settle_done")
+    if args.pre_run_readiness_probe:
+        readiness_probe_inference_nodes(
+            inference_hosts,
+            "qwen3-nothink",
+            args.pre_run_readiness_timeout_sec,
+            args.pre_run_readiness_max_tokens,
+        )
+    print("pre_run_gate_done")
 
 
 def make_run_id(prefix: str, repetition: int, attempt: int = 1) -> str:
@@ -1147,6 +1276,9 @@ async def run_stage(args: argparse.Namespace) -> None:
                             f"interval_sec={args.node_local_thermal_interval_sec}"
                         )
                     if not args.dry_run:
+                        pre_run_readiness_gate(args, inference_hosts)
+                        if thermal_recorder is not None:
+                            thermal_recorder.snapshot(f"post_pre_run_gate_snapshot:{run_id}")
                         await send_scenario(
                             args.scenario,
                             args.harness_url,
