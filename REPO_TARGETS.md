@@ -27,6 +27,7 @@ Checked on 2026-06-01:
 | `runtime_impl/harness/*` | `harness` | `/home/morophi/harness/` | Harness runtime |
 | `runtime_impl/harness/config/*.yaml` | `harness` | `/home/morophi/harness/config/` | Use private env/local secret values at deploy time |
 | `runtime_impl/harness/config/*.json` | `harness` | `/home/morophi/harness/config/` | Theta/reference config |
+| `runtime_impl/harness/start_harness.sh` | `harness` | `/home/morophi/harness/start_harness.sh` | Loads private `.env.local` and starts Harness |
 | `runtime_impl/harness/reference/*` | `harness` | `/home/morophi/harness/reference/` | Fixed CDS reference artifacts; large binaries stay out of Git |
 | `scripts/01_*` to `scripts/15_*` | local/RAG | project or RAG ingest path | Corpus build and retrieval validation |
 | `scripts/16_*` to `scripts/25_*` | local/jump/harness as needed | stage-specific | Freeze, preflight, and E2E helpers |

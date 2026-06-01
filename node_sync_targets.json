@@ -30,7 +30,7 @@
           "kind": "tree",
           "remote_root": "/home/morophi/harness",
           "local_root": "runtime_impl/harness",
-          "include_names": ["*.py", "*.md", "requirements.txt"],
+          "include_names": ["*.py", "*.md", "*.sh", "requirements.txt"],
           "exclude_paths": ["*/__pycache__/*", "*/.venv/*", "*/harness_venv/*", "*/logs/*"]
         },
         {

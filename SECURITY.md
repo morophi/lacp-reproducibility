@@ -8,6 +8,7 @@ machine-local dumps.
 The following values must be provided outside Git:
 
 - `LACP_DB_PASSWORD`
+- Harness local environment file: `/home/morophi/harness/.env.local`
 - SSH private keys and node aliases
 - sudo passwords or operator passwords
 - Tailscale node keys or status JSON
@@ -41,5 +42,6 @@ Keep these out of Git:
 - Conversation exports
 - Office drafts and generated review documents
 - Local network diagnostics
+- Node-local `.env.local` files
 
 Use summaries, manifests, hashes, and documented reproduction commands instead.
