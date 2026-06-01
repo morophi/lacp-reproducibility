@@ -29,6 +29,15 @@ python scripts\26_preformal_stage_md.py --stage cf_e
 python scripts\26_preformal_stage_md.py --stage cf_f
 ```
 
+CR2 pre-formal is a gate for later pre-formal stages. It writes:
+
+- `validation_queries/preformal_md/preformal_theta_config.json`
+- `validation_queries/preformal_md/preformal_cr2_calibration.json`
+
+Pre-formal `run_b` and `cf_*` stages automatically upload this pre-formal theta
+file into the temporary DB-disabled Harness. If the pre-formal theta file is
+missing, those stages are blocked.
+
 Default pre-formal scope is intentionally small:
 
 - `tr`: 1 repetition, 2 turns
@@ -41,5 +50,7 @@ Use `--repetitions` and `--max-turns` only when a larger rehearsal is required.
 - Temporary Harness route returns HTTP 405 for `GET /turn`.
 - Stage runner completes against the DB-disabled Harness.
 - JSONL fallback rows are fetched and summarized.
+- CR2 produces a pre-formal theta config from JSONL evidence.
+- Run B/CF use the CR2-derived pre-formal theta config.
 - dblog row count for generated pre-formal run ids is zero.
 - Generated Markdown status is `PASS`.

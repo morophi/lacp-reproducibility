@@ -40,6 +40,7 @@ Keep these out of Git:
 - ChromaDB data directories
 - Raw JSONL E2E and thermal logs
 - Pre-formal scratch JSONL under `.node_sync_logs`
+- Pre-formal Markdown and theta artifacts should be reviewed before commit
 - Conversation exports
 - Office drafts and generated review documents
 - Local network diagnostics

@@ -13,6 +13,7 @@ and writes a Markdown pre-formal audit artifact.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shlex
@@ -28,6 +29,8 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = REPO_ROOT / "validation_queries" / "preformal_md"
 SCRATCH_DIR = REPO_ROOT / ".node_sync_logs" / "preformal_jsonl"
+PREFORMAL_THETA_PATH = OUTPUT_DIR / "preformal_theta_config.json"
+PREFORMAL_CALIBRATION_PATH = OUTPUT_DIR / "preformal_cr2_calibration.json"
 
 DEFAULT_STAGE_RUNNER = "/home/morophi/agent/run_experiment_stage.py"
 DEFAULT_SCENARIO = "/home/morophi/agent/scenario/lacp_30turn_civil_complaint_v1.json"
@@ -119,6 +122,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stage-runner", default=DEFAULT_STAGE_RUNNER)
     parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
     parser.add_argument("--scratch-dir", type=Path, default=SCRATCH_DIR)
+    parser.add_argument("--pre-theta-path", type=Path, default=PREFORMAL_THETA_PATH)
+    parser.add_argument("--pre-calibration-path", type=Path, default=PREFORMAL_CALIBRATION_PATH)
+    parser.add_argument("--entropy-percentile", type=float, default=0.70)
+    parser.add_argument("--trigger-percentile", type=float, default=0.95)
     parser.add_argument("--run-id-prefix", default=None)
     parser.add_argument("--keep-temp-harness", action="store_true")
     parser.add_argument(
@@ -129,7 +136,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def remote_temp_config_command(harness_home: str, port: int) -> tuple[str, str, str]:
+def remote_temp_config_command(
+    harness_home: str,
+    port: int,
+    remote_calibration_path: str | None,
+) -> tuple[str, str, str]:
     temp_config = f"/tmp/lacp_preformal_node_config_{port}.json"
     jsonl_dir = f"{harness_home}/logs/preformal_runs"
     code = r"""
@@ -140,9 +151,16 @@ from pathlib import Path
 source = Path(sys.argv[1])
 target = Path(sys.argv[2])
 jsonl_dir = sys.argv[3]
+calibration_path = sys.argv[4]
 data = json.loads(source.read_text(encoding="utf-8"))
 data.setdefault("logging", {}).setdefault("db", {})["enabled"] = False
 data["logging"]["jsonl_fallback_dir"] = jsonl_dir
+if calibration_path:
+    calibration = json.loads(Path(calibration_path).read_text(encoding="utf-8"))
+    turns = calibration.get("non_trigger_eligible_turns", [])
+    if turns:
+        data.setdefault("counterfactual", {}).setdefault("cf_f", {})["non_trigger_eligible_turns"] = turns
+        data.setdefault("counterfactual", {}).setdefault("cf_f", {}).setdefault("injection_turns", [])
 target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(target)
 """
@@ -158,6 +176,7 @@ print(target)
             q(f"{harness_home}/config/node_config.yaml"),
             q(temp_config),
             q(jsonl_dir),
+            q(remote_calibration_path or ""),
         ]
     )
     return command, temp_config, jsonl_dir
@@ -165,7 +184,27 @@ print(target)
 
 def start_temp_harness(args: argparse.Namespace) -> list[StepResult]:
     results: list[StepResult] = []
-    prep_cmd, temp_config, _ = remote_temp_config_command(args.harness_home, args.port)
+    remote_theta = None
+    remote_calibration = None
+    if args.stage in {"run_b", "cf_a", "cf_b", "cf_c", "cf_d", "cf_e", "cf_f"}:
+        if not args.pre_theta_path.exists():
+            return [
+                StepResult(
+                    "prepare:pre_theta_required",
+                    False,
+                    2,
+                    "",
+                    f"missing pre-theta config: {args.pre_theta_path}. Run pre-formal CR2 first.",
+                )
+            ]
+        remote_theta = f"/tmp/lacp_preformal_theta_config_{args.port}.json"
+        proc = scp(str(args.pre_theta_path), f"{args.harness_host}:{remote_theta}", timeout=30)
+        results.append(record("prepare:upload_pre_theta", proc))
+        if args.pre_calibration_path.exists():
+            remote_calibration = f"/tmp/lacp_preformal_calibration_{args.port}.json"
+            proc = scp(str(args.pre_calibration_path), f"{args.harness_host}:{remote_calibration}", timeout=30)
+            results.append(record("prepare:upload_pre_calibration", proc))
+    prep_cmd, temp_config, _ = remote_temp_config_command(args.harness_home, args.port, remote_calibration)
     results.append(record("prepare:db_disabled_config", ssh(args.harness_host, prep_cmd, timeout=30)))
 
     kill_cmd = f"fuser -k {args.port}/tcp >/dev/null 2>&1 || true"
@@ -177,7 +216,7 @@ def start_temp_harness(args: argparse.Namespace) -> list[StepResult]:
         f"nohup /home/morophi/harness_venv/bin/python {q(args.harness_home + '/harness_server.py')} "
         f"--config {q(temp_config)} "
         f"--sc-policy {q(args.harness_home + '/config/sc_policy.yaml')} "
-        f"--theta {q(args.harness_home + '/config/theta_config.json')} "
+        f"--theta {q(remote_theta or args.harness_home + '/config/theta_config.json')} "
         f"--host 0.0.0.0 --port {args.port} "
         f"> {q(args.harness_home + f'/logs/preformal_harness_{args.port}.out')} 2>&1 < /dev/null & "
         ")"
@@ -303,6 +342,158 @@ def summarize_jsonl(paths: list[Path]) -> dict[str, Any]:
         run["turns"] = sorted(turn for turn in run["turns"] if turn is not None)
         summary["runs"][path.stem] = stringify_counters(run)
     return stringify_counters(summary)
+
+
+def percentile(values: list[float], pct: float) -> float:
+    if not values:
+        raise ValueError("cannot compute percentile from an empty value set")
+    ordered = sorted(values)
+    rank = (len(ordered) - 1) * pct
+    low = int(rank)
+    high = min(low + 1, len(ordered) - 1)
+    if low == high:
+        return ordered[low]
+    return ordered[low] * (high - rank) + ordered[high] * (rank - low)
+
+
+def file_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def _num(value: Any) -> float | None:
+    return float(value) if isinstance(value, (int, float)) else None
+
+
+def build_preformal_theta(
+    paths: list[Path],
+    run_ids: list[str],
+    entropy_percentile: float,
+    trigger_percentile: float,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    rows_by_turn: dict[tuple[str, int], dict[str, dict[str, Any]]] = defaultdict(dict)
+    entropy_values: list[float] = []
+    for path in paths:
+        with path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                run_id = str(row.get("run_id"))
+                turn_no = int(row.get("turn_no"))
+                node = str(row.get("node"))
+                metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
+                status = row.get("metric_status") if isinstance(row.get("metric_status"), dict) else {}
+                for item in status.get("lms_token_entropies", []):
+                    if isinstance(item, (int, float)):
+                        entropy_values.append(float(item))
+                if row.get("analysis_eligible") is False or row.get("exclude_from_causal_trigger") is True:
+                    continue
+                rows_by_turn[(run_id, turn_no)][node] = metrics
+
+    values = {"d_lms_abs": [], "d_cds_abs": [], "d_ma_abs": []}
+    non_trigger_eligible_turns: list[int] = []
+    for (_run_id, turn_no), nodes in sorted(rows_by_turn.items()):
+        c = nodes.get("C")
+        if not c:
+            continue
+        turn_trigger_eligible = False
+        for node in ("A", "B"):
+            x = nodes.get(node)
+            if not x:
+                continue
+            x_lms, c_lms = _num(x.get("lms_value")), _num(c.get("lms_value"))
+            x_cds, c_cds = _num(x.get("cds")), _num(c.get("cds"))
+            x_ma, c_ma = _num(x.get("ma_assert")), _num(c.get("ma_assert"))
+            d_lms = None if x_lms is None or c_lms is None else x_lms - c_lms
+            d_cds = None if x_cds is None or c_cds is None else c_cds - x_cds
+            d_ma = None if x_ma is None or c_ma is None else x_ma - c_ma
+            if d_lms is not None:
+                values["d_lms_abs"].append(abs(d_lms))
+            if d_cds is not None:
+                values["d_cds_abs"].append(abs(d_cds))
+            if d_ma is not None:
+                values["d_ma_abs"].append(abs(d_ma))
+            if any(value is not None and value > 0.0 for value in (d_lms, d_cds, d_ma)):
+                turn_trigger_eligible = True
+        if not turn_trigger_eligible:
+            non_trigger_eligible_turns.append(turn_no)
+
+    missing = {key: len(items) for key, items in values.items() if not items}
+    if missing or not entropy_values:
+        raise ValueError(
+            "insufficient CR2 pre-formal metrics for theta calibration: "
+            f"missing={missing}, entropy_count={len(entropy_values)}"
+        )
+
+    calibration = {
+        "source": "preformal_cr2_jsonl",
+        "run_ids": run_ids,
+        "metric_counts": {key: len(items) for key, items in values.items()},
+        "entropy_token_count": len(entropy_values),
+        "non_trigger_eligible_turns": sorted(set(non_trigger_eligible_turns)),
+        "created_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "script_sha256": file_sha256(Path(__file__)),
+    }
+    theta = {
+        "theta_entropy": percentile(entropy_values, entropy_percentile),
+        "theta_lms": percentile(values["d_lms_abs"], trigger_percentile),
+        "theta_cds": percentile(values["d_cds_abs"], trigger_percentile),
+        "theta_ma": percentile(values["d_ma_abs"], trigger_percentile),
+        "source": "PREFORMAL_CR2_JSONL",
+        "locked": True,
+        "preformal_only": True,
+        "cr2_run_id": run_ids,
+        "percentile_rule": {
+            "theta_entropy": entropy_percentile,
+            "theta_lms": trigger_percentile,
+            "theta_cds": trigger_percentile,
+            "theta_ma": trigger_percentile,
+        },
+        "calibration": calibration,
+        "notes": "Pre-formal rehearsal theta. Do not use as official formal evidence.",
+    }
+    return theta, calibration
+
+
+def write_preformal_theta_outputs(
+    args: argparse.Namespace,
+    run_ids: list[str],
+    jsonl_paths: list[Path],
+    results: list[StepResult],
+) -> None:
+    if args.stage != "cr2" or not jsonl_paths:
+        return
+    try:
+        theta, calibration = build_preformal_theta(
+            jsonl_paths,
+            run_ids,
+            args.entropy_percentile,
+            args.trigger_percentile,
+        )
+        args.pre_theta_path.parent.mkdir(parents=True, exist_ok=True)
+        args.pre_theta_path.write_text(
+            json.dumps(theta, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        args.pre_calibration_path.write_text(
+            json.dumps(calibration, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        results.append(
+            StepResult(
+                "calibrate:preformal_theta",
+                True,
+                0,
+                f"theta={args.pre_theta_path}\ncalibration={args.pre_calibration_path}",
+                "",
+            )
+        )
+    except Exception as exc:
+        results.append(StepResult("calibrate:preformal_theta", False, 1, "", str(exc)))
 
 
 def stringify_counters(value: Any) -> Any:
@@ -431,6 +622,7 @@ def main() -> int:
             fetch_results, jsonl_paths = fetch_jsonl(args, run_ids)
             results.extend(fetch_results)
             jsonl_summary = summarize_jsonl(jsonl_paths)
+            write_preformal_theta_outputs(args, run_ids, jsonl_paths, results)
             results.append(dblog_count(args, run_ids))
     finally:
         if not args.keep_temp_harness:
