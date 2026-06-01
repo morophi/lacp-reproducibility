@@ -17,6 +17,7 @@ import json
 import math
 import os
 import shlex
+import shutil
 import subprocess
 import threading
 import time
@@ -43,6 +44,7 @@ DEFAULT_ENTROPY_PERCENTILE = 0.70
 DEFAULT_TRIGGER_PERCENTILE = 0.95
 DEFAULT_THERMAL_OUTPUT_DIR = "/home/morophi/agent/validation_queries/formal_thermal"
 DEFAULT_THERMAL_NODES = "inference1=10.1.1.10,inference2=10.1.1.20,inference3=10.1.1.30"
+DEFAULT_FAILED_ARCHIVE_DIR = "/home/morophi/agent/validation_queries/failed_runs"
 
 
 @dataclass(frozen=True)
@@ -161,6 +163,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--node-config-path", default=DEFAULT_NODE_CONFIG_PATH, help="node_config path on Harness.")
     parser.add_argument("--thermal-log", action="store_true", help="Record inference-node thermal status around formal execution.")
     parser.add_argument("--thermal-output-dir", default=DEFAULT_THERMAL_OUTPUT_DIR, help="Directory for thermal JSONL artifacts.")
+    parser.add_argument(
+        "--failed-archive-dir",
+        default=DEFAULT_FAILED_ARCHIVE_DIR,
+        help="Directory for failed-run JSONL/thermal/summary artifacts. DB rows are still purged.",
+    )
     parser.add_argument("--thermal-interval-sec", type=float, default=1.0, help="Thermal sampling interval during execution.")
     parser.add_argument("--thermal-cooldown-sec", type=float, default=10.0, help="Continue thermal sampling after stage completion.")
     parser.add_argument("--turn-timeout-sec", type=float, default=300.0, help="Maximum seconds to wait for one Harness /turn call.")
@@ -460,6 +467,7 @@ def purge_db_run(run_id: str) -> dict[str, int]:
     if not DEFAULT_DB_PASSWORD:
         raise RuntimeError("LACP_DB_PASSWORD must be set for failed-run DB purge")
     query = f"""
+SET @run_pk = NULL;
 START TRANSACTION;
 SELECT id INTO @run_pk FROM experiment_runs WHERE run_id = {sql_quote(run_id)} LIMIT 1;
 SELECT COUNT(*) INTO @experiment_runs_before FROM experiment_runs WHERE id = @run_pk;
@@ -482,6 +490,21 @@ WHERE t.experiment_run_id = @run_pk;
 DELETE FROM turn_node_logs WHERE experiment_run_id = @run_pk;
 DELETE FROM experiment_runs WHERE id = @run_pk;
 COMMIT;
+SET @next_experiment_runs = (SELECT COALESCE(MAX(id), 0) + 1 FROM experiment_runs);
+SET @sql = CONCAT('ALTER TABLE experiment_runs AUTO_INCREMENT = ', @next_experiment_runs);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @next_turn_node_logs = (SELECT COALESCE(MAX(id), 0) + 1 FROM turn_node_logs);
+SET @sql = CONCAT('ALTER TABLE turn_node_logs AUTO_INCREMENT = ', @next_turn_node_logs);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @next_payload_audit_logs = (SELECT COALESCE(MAX(id), 0) + 1 FROM payload_audit_logs);
+SET @sql = CONCAT('ALTER TABLE payload_audit_logs AUTO_INCREMENT = ', @next_payload_audit_logs);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @next_intervention_logs = (SELECT COALESCE(MAX(id), 0) + 1 FROM intervention_logs);
+SET @sql = CONCAT('ALTER TABLE intervention_logs AUTO_INCREMENT = ', @next_intervention_logs);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @next_metric_logs = (SELECT COALESCE(MAX(id), 0) + 1 FROM metric_logs);
+SET @sql = CONCAT('ALTER TABLE metric_logs AUTO_INCREMENT = ', @next_metric_logs);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT 'experiment_runs', @experiment_runs_before
 UNION ALL SELECT 'turn_node_logs', @turn_node_logs_before
 UNION ALL SELECT 'payload_audit_logs', @payload_audit_logs_before
@@ -496,6 +519,58 @@ UNION ALL SELECT 'metric_logs', @metric_logs_before;
         counts[table] = int(value)
     print(f"db_purge_done run_id={run_id} removed={json.dumps(counts, sort_keys=True)}")
     return counts
+
+
+def archive_failed_run_artifacts(
+    run_id: str,
+    args: argparse.Namespace,
+    error: Exception,
+    thermal_path: Optional[Path],
+) -> Path:
+    archive_root = Path(args.failed_archive_dir)
+    archive_dir = archive_root / run_id
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    summary = {
+        "run_id": run_id,
+        "stage": args.stage,
+        "condition": args.condition or STAGES[args.stage].condition,
+        "run_mode": args.run_mode or STAGES[args.stage].run_mode,
+        "archived_at_utc": datetime.now(timezone.utc).isoformat(),
+        "error": str(error),
+        "db_policy": "failed formal run rows are purged; failure evidence is preserved only as files",
+    }
+    (archive_dir / "failure_summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (archive_dir / "failure_summary.md").write_text(
+        "\n".join(
+            [
+                "# Failed Run Artifact",
+                "",
+                f"- run_id: `{run_id}`",
+                f"- stage: `{summary['stage']}`",
+                f"- condition: `{summary['condition']}`",
+                f"- run_mode: `{summary['run_mode']}`",
+                f"- archived_at_utc: `{summary['archived_at_utc']}`",
+                f"- db_policy: {summary['db_policy']}",
+                "",
+                "## Error",
+                "",
+                "```text",
+                str(error),
+                "```",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    remote_jsonl = f"{args.harness_host}:/home/morophi/harness/logs/runs/{run_id}.jsonl"
+    subprocess.run(["scp", remote_jsonl, str(archive_dir / f"{run_id}.jsonl")], check=False)
+    if thermal_path is not None and thermal_path.exists():
+        shutil.copy2(thermal_path, archive_dir / thermal_path.name)
+    print(f"failed_run_artifact_archive path={archive_dir}")
+    return archive_dir
 
 
 def percentile(values: list[float], pct: float) -> float:
@@ -866,6 +941,12 @@ async def run_stage(args: argparse.Namespace) -> None:
                     print(f"stage_run_failed run_id={run_id} attempt={attempt} error={exc}")
                     if thermal_recorder is not None:
                         thermal_recorder.snapshot(f"failed_run_snapshot:{run_id}")
+                    archive_failed_run_artifacts(
+                        run_id,
+                        args,
+                        exc,
+                        thermal_recorder.path if thermal_recorder is not None else None,
+                    )
                     if not args.dry_run:
                         purge_db_run(run_id)
                     if attempt >= args.max_run_attempts:

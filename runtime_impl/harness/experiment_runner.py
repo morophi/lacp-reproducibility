@@ -98,25 +98,41 @@ class ExperimentRunner:
         histories = self._histories_for_run(run_id)
         metrics_for_run = self.last_metrics.setdefault(run_id, {})
         plan = await self._prepare_interventions(condition, utterance, metrics_for_run, turn_no, run_mode)
+        prompt_histories = {
+            node: self._bounded_prompt_history(histories[node], run_mode)
+            for node in ("A", "B", "C")
+        }
 
         built = {
             "A": build_messages(
                 "A",
                 utterance,
-                histories["A"],
+                prompt_histories["A"],
                 plan["A"]["rag_chunks"],
                 plan["A"]["sc_policy_block"],
                 self.sc_engine.policy_hash if plan["A"]["sc_policy_block"] else None,
             ),
-            "B": build_messages("B", utterance, histories["B"], plan["B"]["rag_chunks"], None, None),
-            "C": build_messages("C", utterance, histories["C"], None, None, None),
+            "B": build_messages("B", utterance, prompt_histories["B"], plan["B"]["rag_chunks"], None, None),
+            "C": build_messages("C", utterance, prompt_histories["C"], None, None, None),
         }
+        for node, payload in built.items():
+            payload["prompt_metadata"]["history_messages_total"] = len(histories[node])
+            payload["prompt_metadata"]["history_messages_used"] = len(prompt_histories[node])
+            payload["prompt_metadata"]["history_window_turns"] = self._history_window_for_run_mode(run_mode)
 
         responses = await asyncio.gather(
             self.node_client.chat("A", built["A"]["messages"], run_mode=run_mode),
             self.node_client.chat("B", built["B"]["messages"], run_mode=run_mode),
             self.node_client.chat("C", built["C"]["messages"], run_mode=run_mode),
         )
+        if run_mode == "formal":
+            bad_responses = [
+                f"{response['node']}:status={response.get('status')}"
+                for response in responses
+                if not response.get("ok")
+            ]
+            if bad_responses:
+                raise RuntimeError(f"formal node response failed: {', '.join(bad_responses)}")
         # Execute compatibility note:
         # The pipeline order remains response -> quality gate -> metrics ->
         # history policy -> JSONL -> MariaDB. Earlier versions treated formal
@@ -159,6 +175,14 @@ class ExperimentRunner:
             node_metrics[node]["analysis_eligible"] = quality_by_node[node]["analysis_eligible"]
             node_metrics[node]["exclude_from_causal_trigger"] = quality_by_node[node]["exclude_from_causal_trigger"]
             node_metrics[node]["history_eligible"] = quality_by_node[node]["history_eligible"]
+        if run_mode == "formal":
+            bad_quality = [
+                f"{node}:{quality.get('invalid_reason')}"
+                for node, quality in quality_by_node.items()
+                if not quality.get("generation_quality_ready") or not quality.get("analysis_eligible")
+            ]
+            if bad_quality:
+                raise RuntimeError(f"formal node quality gate failed: {', '.join(bad_quality)}")
 
         cross_metrics = self.metric_computer.compute_cross_node_metrics(node_metrics)
         for node, metrics in node_metrics.items():
@@ -478,6 +502,25 @@ class ExperimentRunner:
         # history; the quality gate must explicitly mark history_eligible=false.
         if quality_gate.get("history_eligible"):
             cls._append_history(history, utterance, response_text)
+
+    def _history_window_for_run_mode(self, run_mode: str) -> Optional[int]:
+        mode_cfg = self.config.get("run_modes", {}).get(run_mode, {})
+        if isinstance(mode_cfg, dict) and mode_cfg.get("history_window_turns") is not None:
+            value = int(mode_cfg["history_window_turns"])
+            if value < 1:
+                raise ValueError("history_window_turns must be >= 1 when configured")
+            return value
+        return None
+
+    def _bounded_prompt_history(
+        self,
+        history: List[Dict[str, str]],
+        run_mode: str,
+    ) -> List[Dict[str, str]]:
+        window_turns = self._history_window_for_run_mode(run_mode)
+        if window_turns is None:
+            return list(history)
+        return list(history[-window_turns * 2 :])
 
     @staticmethod
     def _validate_turn_payload(payload: Dict[str, Any]) -> None:

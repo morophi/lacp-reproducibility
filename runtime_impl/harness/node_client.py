@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 import time
 from typing import Any, Dict, List, Tuple
@@ -26,6 +27,7 @@ class NodeClient:
         self.seed = int(model_config.get("seed", 42))
         self.thinking = bool(model_config.get("thinking", False))
         self.num_predict = int(model_config.get("num_predict", 512))
+        self.request_timeout_sec = float(model_config.get("request_timeout_sec", 240.0))
         self.endpoint_by_run_mode = model_config.get("endpoint_by_run_mode", {})
         self.request_logprobs = bool(model_config.get("request_logprobs", False))
         self.top_logprobs = int(model_config.get("top_logprobs", 5))
@@ -46,8 +48,8 @@ class NodeClient:
                 "temperature": self.temperature,
                 "seed": self.seed,
                 "max_tokens": num_predict,
-                "logprobs": self.request_logprobs,
-                "top_logprobs": self.top_logprobs,
+                "logprobs": self._request_logprobs_for_run_mode(run_mode),
+                "top_logprobs": self._top_logprobs_for_run_mode(run_mode),
                 "think": self.thinking,
             }
         elif endpoint_mode == "native_chat":
@@ -67,36 +69,50 @@ class NodeClient:
             raise ValueError(f"Unsupported node endpoint mode: {endpoint_mode}")
 
         start = time.perf_counter()
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, timeout=None) as resp:
-                raw_text = await resp.text()
-                elapsed_ms = (time.perf_counter() - start) * 1000
-                try:
-                    raw = await resp.json()
-                except Exception:
-                    raw = {"raw_text": raw_text}
-                response_text_raw = self._extract_response_text(raw)
-                clean_info = self._clean_response(response_text_raw, raw)
-                return {
-                    "node": normalized_node,
-                    "ok": resp.status == 200,
-                    "status": resp.status,
-                    "endpoint_mode": endpoint_mode,
-                    "text": clean_info["clean_text"],
-                    "text_raw": response_text_raw,
-                    "thinking_tag_present": clean_info["thinking_tag_present"],
-                    "empty_thinking_shell": clean_info["empty_thinking_shell"],
-                    "thinking_content_present": clean_info["thinking_content_present"],
-                    "cleaning_applied": clean_info["cleaning_applied"],
-                    "cleaning_allowed": clean_info["cleaning_allowed"],
-                    "failed_TR": clean_info["failed_TR"],
-                    "removed_prefix_chars": clean_info["removed_prefix_chars"],
-                    "raw_logprobs": clean_info["raw_logprobs"],
-                    "clean_logprobs": clean_info["clean_logprobs"],
-                    "excluded_token_positions": clean_info["excluded_token_positions"],
-                    "raw": raw,
-                    "elapsed_ms": elapsed_ms,
-                }
+        request_timeout = self._request_timeout_for_run_mode(run_mode)
+        timeout = aiohttp.ClientTimeout(total=request_timeout)
+        try:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(url, json=payload) as resp:
+                    raw_text = await resp.text()
+                    elapsed_ms = (time.perf_counter() - start) * 1000
+                    try:
+                        raw = await resp.json()
+                    except Exception:
+                        raw = {"raw_text": raw_text}
+                    response_text_raw = self._extract_response_text(raw)
+                    clean_info = self._clean_response(response_text_raw, raw)
+                    return {
+                        "node": normalized_node,
+                        "ok": resp.status == 200,
+                        "status": resp.status,
+                        "endpoint_mode": endpoint_mode,
+                        "text": clean_info["clean_text"],
+                        "text_raw": response_text_raw,
+                        "thinking_tag_present": clean_info["thinking_tag_present"],
+                        "empty_thinking_shell": clean_info["empty_thinking_shell"],
+                        "thinking_content_present": clean_info["thinking_content_present"],
+                        "cleaning_applied": clean_info["cleaning_applied"],
+                        "cleaning_allowed": clean_info["cleaning_allowed"],
+                        "failed_TR": clean_info["failed_TR"],
+                        "removed_prefix_chars": clean_info["removed_prefix_chars"],
+                        "raw_logprobs": clean_info["raw_logprobs"],
+                        "clean_logprobs": clean_info["clean_logprobs"],
+                        "excluded_token_positions": clean_info["excluded_token_positions"],
+                        "raw": raw,
+                        "elapsed_ms": elapsed_ms,
+                    }
+        except asyncio.TimeoutError as exc:
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            raise TimeoutError(
+                "node request timeout "
+                f"node={normalized_node} run_mode={run_mode} endpoint={endpoint_mode} "
+                f"timeout_sec={request_timeout} elapsed_ms={elapsed_ms:.1f}"
+            ) from exc
+        except aiohttp.ClientError as exc:
+            raise RuntimeError(
+                f"node request failed node={normalized_node} run_mode={run_mode} endpoint={endpoint_mode}: {exc}"
+            ) from exc
 
     def _openai_chat_url(self, node: str) -> str:
         url = self.nodes[node]["url"]
@@ -111,6 +127,24 @@ class NodeClient:
         if isinstance(mode_cfg, dict) and mode_cfg.get("num_predict") is not None:
             return int(mode_cfg["num_predict"])
         return self.num_predict
+
+    def _request_timeout_for_run_mode(self, run_mode: str) -> float:
+        mode_cfg = self.run_modes.get(run_mode, {})
+        if isinstance(mode_cfg, dict) and mode_cfg.get("request_timeout_sec") is not None:
+            return float(mode_cfg["request_timeout_sec"])
+        return self.request_timeout_sec
+
+    def _request_logprobs_for_run_mode(self, run_mode: str) -> bool:
+        mode_cfg = self.run_modes.get(run_mode, {})
+        if isinstance(mode_cfg, dict) and mode_cfg.get("request_logprobs") is not None:
+            return bool(mode_cfg["request_logprobs"])
+        return self.request_logprobs
+
+    def _top_logprobs_for_run_mode(self, run_mode: str) -> int:
+        mode_cfg = self.run_modes.get(run_mode, {})
+        if isinstance(mode_cfg, dict) and mode_cfg.get("top_logprobs") is not None:
+            return int(mode_cfg["top_logprobs"])
+        return self.top_logprobs
 
     def _extract_response_text(self, raw: Dict[str, Any]) -> str:
         choices = raw.get("choices")
