@@ -18,8 +18,11 @@ import math
 import os
 import shlex
 import subprocess
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -38,6 +41,8 @@ DEFAULT_THETA_PATH = "/home/morophi/harness/config/theta_config.json"
 DEFAULT_NODE_CONFIG_PATH = "/home/morophi/harness/config/node_config.yaml"
 DEFAULT_ENTROPY_PERCENTILE = 0.70
 DEFAULT_TRIGGER_PERCENTILE = 0.95
+DEFAULT_THERMAL_OUTPUT_DIR = "/home/morophi/agent/validation_queries/formal_thermal"
+DEFAULT_THERMAL_NODES = "inference1=10.1.1.10,inference2=10.1.1.20,inference3=10.1.1.30"
 
 
 @dataclass(frozen=True)
@@ -152,8 +157,204 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--harness-host", default=DEFAULT_HARNESS_HOST, help="SSH/SCP target for Harness.")
     parser.add_argument("--theta-path", default=DEFAULT_THETA_PATH, help="theta_config.json path on Harness.")
     parser.add_argument("--node-config-path", default=DEFAULT_NODE_CONFIG_PATH, help="node_config path on Harness.")
+    parser.add_argument("--thermal-log", action="store_true", help="Record inference-node thermal status around formal execution.")
+    parser.add_argument("--thermal-output-dir", default=DEFAULT_THERMAL_OUTPUT_DIR, help="Directory for thermal JSONL artifacts.")
+    parser.add_argument("--thermal-interval-sec", type=float, default=1.0, help="Thermal sampling interval during execution.")
+    parser.add_argument("--thermal-cooldown-sec", type=float, default=10.0, help="Continue thermal sampling after stage completion.")
+    parser.add_argument(
+        "--thermal-nodes",
+        default=DEFAULT_THERMAL_NODES,
+        help="Comma-separated SSH targets to sample; use label=host to preserve node names.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print planned runs without sending turns.")
     return parser.parse_args()
+
+
+class ThermalRecorder:
+    def __init__(
+        self,
+        run_id: str,
+        output_dir: Path,
+        nodes: tuple[tuple[str, str], ...],
+        interval_sec: float,
+        cooldown_sec: float,
+    ) -> None:
+        self.run_id = run_id
+        self.output_dir = output_dir
+        self.nodes = nodes
+        self.interval_sec = interval_sec
+        self.cooldown_sec = cooldown_sec
+        self.path = output_dir / f"{run_id}_thermal.jsonl"
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def start(self) -> None:
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self._write(
+            {
+                "event": "thermal_logger_start",
+                "run_id": self.run_id,
+                "nodes": [{"label": label, "ssh_host": host} for label, host in self.nodes],
+                "interval_sec": self.interval_sec,
+                "cooldown_sec": self.cooldown_sec,
+                "timestamp": now_iso(),
+            }
+        )
+        self.snapshot("pre_stage_idle_snapshot")
+        self._thread = threading.Thread(target=self._loop, name=f"thermal-{self.run_id}", daemon=True)
+        self._thread.start()
+
+    def snapshot(self, event: str) -> None:
+        for row in self._sample_all(event):
+            self._write(row)
+
+    def stop(self) -> None:
+        self.snapshot("post_stage_immediate_snapshot")
+        if self.cooldown_sec > 0:
+            self._write(
+                {
+                    "event": "thermal_cooldown_start",
+                    "run_id": self.run_id,
+                    "cooldown_sec": self.cooldown_sec,
+                    "timestamp": now_iso(),
+                }
+            )
+            self._stop.wait(self.cooldown_sec)
+            self.snapshot("post_stage_cooldown_snapshot")
+            self._write(
+                {
+                    "event": "thermal_cooldown_end",
+                    "run_id": self.run_id,
+                    "cooldown_sec": self.cooldown_sec,
+                    "timestamp": now_iso(),
+                }
+            )
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=max(10.0, self.interval_sec * 8))
+        self._write({"event": "thermal_logger_stop", "run_id": self.run_id, "timestamp": now_iso()})
+
+    def _loop(self) -> None:
+        while not self._stop.is_set():
+            started = time.monotonic()
+            for row in self._sample_all("thermal_sample"):
+                self._write(row)
+            elapsed = time.monotonic() - started
+            self._stop.wait(max(0.0, self.interval_sec - elapsed))
+
+    def _sample_all(self, event: str) -> list[dict[str, object]]:
+        with ThreadPoolExecutor(max_workers=max(1, len(self.nodes))) as executor:
+            futures = [
+                executor.submit(sample_thermal_node, self.run_id, event, label, host)
+                for label, host in self.nodes
+            ]
+            return [future.result() for future in as_completed(futures)]
+
+    def _write(self, row: dict[str, object]) -> None:
+        with self.path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).astimezone().isoformat()
+
+
+def run_command(args: list[str], timeout: int = 30) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            args,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or ""
+        stderr = exc.stderr or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode("utf-8", errors="replace")
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode("utf-8", errors="replace")
+        return subprocess.CompletedProcess(
+            args,
+            124,
+            stdout=stdout,
+            stderr=(stderr + f"\nTimeoutExpired after {timeout}s").strip(),
+        )
+
+
+def ssh(host: str, remote_command: str, timeout: int = 30) -> subprocess.CompletedProcess[str]:
+    return run_command(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, remote_command], timeout=timeout)
+
+
+def parse_thermal_nodes(raw: str) -> tuple[tuple[str, str], ...]:
+    nodes = []
+    for item in raw.split(","):
+        value = item.strip()
+        if not value:
+            continue
+        if "=" in value:
+            label, host = value.split("=", 1)
+            nodes.append((label.strip(), host.strip()))
+        else:
+            nodes.append((value, value))
+    return tuple((label, host) for label, host in nodes if label and host)
+
+
+def sample_thermal_node(run_id: str, event: str, node: str, ssh_host: str) -> dict[str, object]:
+    proc = ssh(ssh_host, remote_temperature_command(), timeout=8)
+    base: dict[str, object] = {
+        "event": event,
+        "run_id": run_id,
+        "timestamp": now_iso(),
+        "node": node,
+        "ssh_host": ssh_host,
+        "reachable": proc.returncode == 0,
+        "returncode": proc.returncode,
+    }
+    if proc.returncode != 0:
+        return {**base, "max_temp_c": None, "temperatures": [], "stderr": proc.stderr.strip()}
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return {**base, "max_temp_c": None, "temperatures": [], "stdout": proc.stdout.strip(), "stderr": proc.stderr.strip()}
+    return {**base, **payload, "stderr": proc.stderr.strip()}
+
+
+def remote_temperature_command() -> str:
+    code = r"""
+import glob,json,os
+temps=[]
+for path in sorted(glob.glob('/sys/class/hwmon/hwmon*/temp*_input')):
+    try:
+        raw=open(path, encoding='utf-8').read().strip()
+        value=float(raw)
+        temp_c=value/1000.0 if value > 1000 else value
+        hwmon_dir=os.path.dirname(path)
+        name_path=os.path.join(hwmon_dir, 'name')
+        name=open(name_path, encoding='utf-8').read().strip() if os.path.exists(name_path) else os.path.basename(hwmon_dir)
+        label_path=path[:-6] + '_label'
+        label=open(label_path, encoding='utf-8').read().strip() if os.path.exists(label_path) else os.path.basename(path)
+        temps.append({'source': path, 'device': name, 'label': label, 'temp_c': round(temp_c, 3)})
+    except Exception as exc:
+        temps.append({'source': path, 'error': f'{type(exc).__name__}: {exc}'})
+for path in sorted(glob.glob('/sys/class/thermal/thermal_zone*/temp')):
+    try:
+        raw=open(path, encoding='utf-8').read().strip()
+        value=float(raw)
+        temp_c=value/1000.0 if value > 1000 else value
+        zone=os.path.basename(os.path.dirname(path))
+        type_path=os.path.join(os.path.dirname(path), 'type')
+        label=open(type_path, encoding='utf-8').read().strip() if os.path.exists(type_path) else zone
+        temps.append({'source': path, 'device': 'thermal_zone', 'label': label, 'temp_c': round(temp_c, 3)})
+    except Exception as exc:
+        temps.append({'source': path, 'error': f'{type(exc).__name__}: {exc}'})
+valid=[item['temp_c'] for item in temps if isinstance(item.get('temp_c'), (int, float))]
+print(json.dumps({'max_temp_c': max(valid) if valid else None, 'temperatures': temps}, ensure_ascii=False))
+"""
+    return "python3 -c " + shlex.quote(code)
 
 
 def make_run_id(prefix: str, repetition: int) -> str:
@@ -541,33 +742,64 @@ async def run_stage(args: argparse.Namespace) -> None:
     max_turns = None if args.full_scenario else (args.max_turns if args.max_turns is not None else spec.max_turns)
     prefix = args.run_id_prefix or spec.run_id_prefix
     turns = expected_turns(args.scenario, max_turns)
+    thermal_nodes = parse_thermal_nodes(args.thermal_nodes)
+    thermal_recorder = None
+    if args.thermal_log:
+        if not thermal_nodes:
+            raise ValueError("--thermal-nodes must include at least one SSH target when --thermal-log is enabled")
+        thermal_run_id = f"{prefix}_{args.stage}_{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
+        thermal_recorder = ThermalRecorder(
+            thermal_run_id,
+            Path(args.thermal_output_dir),
+            thermal_nodes,
+            args.thermal_interval_sec,
+            args.thermal_cooldown_sec,
+        )
 
     print(
         "stage_plan "
         f"stage={args.stage} condition={spec.condition} run_mode={spec.run_mode} "
         f"repetitions={repetitions} turns_per_run={turns} causal_evidence={spec.causal_evidence}"
     )
+    if thermal_recorder is not None:
+        print(
+            f"thermal_log_start path={thermal_recorder.path} "
+            f"nodes={','.join(label for label, _host in thermal_nodes)}"
+        )
+        thermal_recorder.start()
 
-    run_ids = []
-    for index in range(1, repetitions + 1):
-        run_id = make_run_id(prefix, index)
-        run_ids.append(run_id)
-        print(f"stage_run_start run_id={run_id}")
-        if not args.dry_run:
-            await send_scenario(
-                args.scenario,
-                args.harness_url,
-                run_id,
-                spec.condition,
-                spec.run_mode,
-                max_turns=max_turns,
-            )
-            if not args.skip_db_check:
-                check_db_rows(run_id, turns, spec.expected_nodes)
-        print(f"stage_run_done run_id={run_id}")
+    try:
+        run_ids = []
+        for index in range(1, repetitions + 1):
+            run_id = make_run_id(prefix, index)
+            run_ids.append(run_id)
+            print(f"stage_run_start run_id={run_id}")
+            if thermal_recorder is not None:
+                thermal_recorder.snapshot(f"pre_run_snapshot:{run_id}")
+            if not args.dry_run:
+                await send_scenario(
+                    args.scenario,
+                    args.harness_url,
+                    run_id,
+                    spec.condition,
+                    spec.run_mode,
+                    max_turns=max_turns,
+                )
+                if thermal_recorder is not None:
+                    thermal_recorder.snapshot(f"post_run_immediate_snapshot:{run_id}")
+                if not args.skip_db_check:
+                    check_db_rows(run_id, turns, spec.expected_nodes)
+            else:
+                if thermal_recorder is not None:
+                    thermal_recorder.snapshot(f"dry_run_post_plan_snapshot:{run_id}")
+            print(f"stage_run_done run_id={run_id}")
 
-    if args.stage == "cr2" and not args.dry_run and not args.skip_theta_freeze:
-        freeze_theta_after_cr2(args, run_ids, turns, repetitions)
+        if args.stage == "cr2" and not args.dry_run and not args.skip_theta_freeze:
+            freeze_theta_after_cr2(args, run_ids, turns, repetitions)
+    finally:
+        if thermal_recorder is not None:
+            thermal_recorder.stop()
+            print(f"thermal_log_done path={thermal_recorder.path}")
 
 
 def main() -> None:
