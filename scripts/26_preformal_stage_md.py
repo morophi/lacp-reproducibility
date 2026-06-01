@@ -44,11 +44,17 @@ DEFAULT_HARNESS_IP = "10.1.1.110"
 DEFAULT_PORT = 9010
 DEFAULT_HARNESS_HOME = "/home/morophi/harness"
 ARTIFACT_DISCLAIMER = (
-    "This artifact is a DB-free pre-formal stage rehearsal report. It is not "
-    "formal experimental evidence and is excluded from CR, CR2, Run B, CF, "
-    "statistical testing, official threshold estimation, effect-size "
-    "estimation, and causal interpretation."
+    "This artifact is a DB-disabled Harness stage rehearsal report. It is not "
+    "a DB-free direct inference readiness gate, not a formal stage run, and not "
+    "formal experimental evidence. It is excluded from CR, CR2, Run B, CF, "
+    "statistical testing, official threshold estimation, effect-size estimation, "
+    "and causal interpretation."
 )
+INFERENCE_NODES = {
+    "A": {"host": "10.1.1.10"},
+    "B": {"host": "10.1.1.20"},
+    "C": {"host": "10.1.1.30"},
+}
 
 STAGES = {
     "tr": {"condition": "run_b", "run_mode": "smoke", "repetitions": 1, "max_turns": 2},
@@ -138,6 +144,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--trigger-percentile", type=float, default=0.95)
     parser.add_argument("--run-id-prefix", default=None)
     parser.add_argument("--keep-temp-harness", action="store_true")
+    parser.add_argument("--unload-timeout-s", type=float, default=30.0)
+    parser.add_argument("--settle-sec", type=float, default=15.0)
     parser.add_argument(
         "--dry-plan",
         action="store_true",
@@ -232,10 +240,16 @@ def start_temp_harness(args: argparse.Namespace) -> list[StepResult]:
         ")"
     )
     results.append(record("prepare:start_temp_harness", ssh(args.harness_host, start_cmd, timeout=20)))
-    time.sleep(2)
 
-    probe = f"curl -s -o /dev/null -w '%{{http_code}}' http://127.0.0.1:{args.port}/turn"
-    proc = ssh(args.harness_host, probe, timeout=20)
+    probe = (
+        "for i in $(seq 1 30); do "
+        f"code=$(curl -s -o /dev/null -w '%{{http_code}}' http://127.0.0.1:{args.port}/turn || true); "
+        "if [ \"$code\" = \"405\" ]; then echo \"$code\"; exit 0; fi; "
+        "sleep 1; "
+        "done; "
+        "echo \"${code:-000}\"; exit 7"
+    )
+    proc = ssh(args.harness_host, probe, timeout=40)
     results.append(record("verify:temp_harness_route", proc, ok=proc.returncode == 0 and proc.stdout.strip() == "405"))
     return results
 
@@ -245,19 +259,224 @@ def stop_temp_harness(args: argparse.Namespace) -> StepResult:
     return record("cleanup:stop_temp_harness", proc, ok=True)
 
 
+def unload_inference_runners(args: argparse.Namespace) -> StepResult:
+    payload = {"model": "qwen3-nothink", "prompt": "", "stream": False, "keep_alive": 0}
+    code = r"""
+import json
+import sys
+import time
+import urllib.error
+import urllib.request
+
+nodes = json.loads(sys.argv[1])
+payload = json.loads(sys.argv[2])
+timeout_s = float(sys.argv[3])
+
+print(json.dumps({"event": "unload_start", "timeout_s": timeout_s}, ensure_ascii=False))
+all_ok = True
+for node, meta in nodes.items():
+    host = meta["host"]
+    url = f"http://{host}:11434/api/generate"
+    started = time.perf_counter()
+    try:
+        request = urllib.request.Request(
+            url,
+            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=timeout_s) as response:
+            body = response.read()
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            row = {
+                "node": node,
+                "host": host,
+                "ok": response.status == 200,
+                "status": response.status,
+                "elapsed_ms": round(elapsed_ms, 1),
+                "bytes": len(body),
+            }
+            all_ok = all_ok and row["ok"]
+            print(json.dumps(row, ensure_ascii=False))
+    except urllib.error.HTTPError as exc:
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        all_ok = False
+        print(json.dumps({
+            "node": node,
+            "host": host,
+            "ok": False,
+            "status": exc.code,
+            "elapsed_ms": round(elapsed_ms, 1),
+            "error": "HTTPError",
+            "body_prefix": exc.read().decode("utf-8", errors="replace")[:300],
+        }, ensure_ascii=False))
+    except Exception as exc:
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        all_ok = False
+        print(json.dumps({
+            "node": node,
+            "host": host,
+            "ok": False,
+            "elapsed_ms": round(elapsed_ms, 1),
+            "error": type(exc).__name__,
+            "detail": str(exc),
+        }, ensure_ascii=False))
+
+raise SystemExit(0 if all_ok else 2)
+"""
+    cmd = " ".join(
+        [
+            "/home/morophi/harness_venv/bin/python3",
+            "-c",
+            q(code),
+            q(json.dumps(INFERENCE_NODES)),
+            q(json.dumps(payload)),
+            q(str(args.unload_timeout_s)),
+        ]
+    )
+    proc = ssh(args.harness_host, cmd, timeout=int(args.unload_timeout_s * len(INFERENCE_NODES) + 60))
+    return record("cleanup:inference_runner_unload_keep_alive_0", proc)
+
+
+def settle_after_unload(args: argparse.Namespace) -> StepResult:
+    if args.settle_sec <= 0:
+        return StepResult("cleanup:inference_runner_settle", True, 0, "settle skipped", "")
+    time.sleep(args.settle_sec)
+    return StepResult(
+        "cleanup:inference_runner_settle",
+        True,
+        0,
+        f"settle_sec={args.settle_sec}",
+        "",
+    )
+
+
+def check_post_unload_runners() -> StepResult:
+    lines: list[str] = []
+    ok = True
+    for node, meta in INFERENCE_NODES.items():
+        host = meta["host"]
+        ssh_host = {"A": "inference1", "B": "inference2", "C": "inference3"}[node]
+        proc = ssh(ssh_host, "ollama ps 2>/dev/null || true", timeout=20)
+        active_models = 0
+        for line in proc.stdout.splitlines():
+            stripped = line.strip()
+            if stripped and not stripped.startswith("NAME"):
+                active_models += 1
+        row = {
+            "node": node,
+            "host": host,
+            "ssh": ssh_host,
+            "ok": proc.returncode == 0 and active_models == 0,
+            "active_models": active_models,
+        }
+        ok = ok and row["ok"]
+        lines.append(json.dumps(row, ensure_ascii=False, sort_keys=True))
+    return StepResult(
+        "cleanup:post_unload_ollama_ps_empty",
+        ok,
+        0 if ok else 2,
+        "\n".join(lines),
+        "",
+    )
+
+
 def dblog_count(args: argparse.Namespace, run_ids: list[str]) -> StepResult:
     if not run_ids:
         return StepResult("verify:dblog_zero_rows", False, 1, "", "no run_ids to check")
-    quoted_ids = ", ".join("'" + run_id.replace("'", "''") + "'" for run_id in run_ids)
-    sql = (
-        "SELECT COUNT(*) FROM experiment_runs WHERE run_id IN ({ids});"
-    ).format(ids=quoted_ids)
-    cmd = (
-        f"set -a; . {q(args.harness_home + '/.env.local')}; set +a; "
-        f"mysql -h10.1.1.130 -umorophi --password=\"$LACP_DB_PASSWORD\" lacp_db -N -B -e {q(sql)}"
+    code = r"""
+import json
+import sys
+
+import pymysql
+
+
+def load_env(path):
+    values = {}
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            values[key] = value.strip().strip('"').strip("'")
+    return values
+
+
+run_ids = json.loads(sys.argv[1])
+env = load_env(sys.argv[2])
+password = env.get("LACP_DB_PASSWORD")
+if not password:
+    raise SystemExit("missing LACP_DB_PASSWORD in harness env file")
+
+placeholders = ", ".join(["%s"] * len(run_ids))
+queries = {
+    "experiment_runs": f"SELECT COUNT(*) FROM experiment_runs WHERE run_id IN ({placeholders})",
+    "turn_node_logs": (
+        "SELECT COUNT(*) FROM turn_node_logs t "
+        "JOIN experiment_runs r ON r.id=t.experiment_run_id "
+        f"WHERE r.run_id IN ({placeholders})"
+    ),
+    "intervention_logs": (
+        "SELECT COUNT(*) FROM intervention_logs i "
+        "JOIN turn_node_logs t ON t.id=i.turn_node_log_id "
+        "JOIN experiment_runs r ON r.id=t.experiment_run_id "
+        f"WHERE r.run_id IN ({placeholders})"
+    ),
+    "metric_logs": (
+        "SELECT COUNT(*) FROM metric_logs m "
+        "JOIN turn_node_logs t ON t.id=m.turn_node_log_id "
+        "JOIN experiment_runs r ON r.id=t.experiment_run_id "
+        f"WHERE r.run_id IN ({placeholders})"
+    ),
+    "rag_retrieval_logs": (
+        "SELECT COUNT(*) FROM rag_retrieval_logs g "
+        "JOIN turn_node_logs t ON t.id=g.turn_node_log_id "
+        "JOIN experiment_runs r ON r.id=t.experiment_run_id "
+        f"WHERE r.run_id IN ({placeholders})"
+    ),
+    "payload_audit_logs": (
+        "SELECT COUNT(*) FROM payload_audit_logs p "
+        "JOIN turn_node_logs t ON t.id=p.turn_node_log_id "
+        "JOIN experiment_runs r ON r.id=t.experiment_run_id "
+        f"WHERE r.run_id IN ({placeholders})"
+    ),
+}
+
+conn = pymysql.connect(
+    host="10.1.1.130",
+    user="morophi",
+    password=password,
+    database="lacp_db",
+    charset="utf8mb4",
+)
+try:
+    counts = {}
+    with conn.cursor() as cursor:
+        for name, query in queries.items():
+            cursor.execute(query, run_ids)
+            counts[name] = int(cursor.fetchone()[0])
+finally:
+    conn.close()
+
+print(json.dumps(counts, sort_keys=True))
+"""
+    cmd = " ".join(
+        [
+            q(f"{args.harness_home}/../harness_venv/bin/python"),
+            "-c",
+            q(code),
+            q(json.dumps(run_ids, ensure_ascii=True)),
+            q(f"{args.harness_home}/.env.local"),
+        ]
     )
     proc = ssh(args.harness_host, cmd, timeout=40)
-    ok = proc.returncode == 0 and proc.stdout.strip() == "0"
+    ok = False
+    if proc.returncode == 0:
+        try:
+            ok = all(value == 0 for value in json.loads(proc.stdout).values())
+        except json.JSONDecodeError:
+            ok = False
     return record("verify:dblog_zero_rows", proc, ok=ok)
 
 
@@ -304,6 +523,30 @@ def summarize_jsonl(paths: list[Path]) -> dict[str, Any]:
     summary: dict[str, Any] = {
         "runs": {},
         "total_rows": 0,
+        "nonempty_response_text_rows": 0,
+        "runtime_error_rows": 0,
+        "thinking_content_present_rows": 0,
+        "empty_thinking_shell_rows": 0,
+        "raw_logprobs_positive_rows": 0,
+        "clean_logprobs_positive_rows": 0,
+        "path_ready_rows": 0,
+        "truncation_risk_rows": 0,
+        "usable_as_rehearsal_path_evidence_rows": 0,
+        "usable_as_formal_quality_outcome_rows": 0,
+        "formal_quality_analysis_claimed": False,
+        "quality_analysis_readiness_claimed": False,
+        "analysis_eligible_semantics": (
+            "rehearsal-internal flag only; not formal causal-analysis eligibility"
+        ),
+        "quality_ready_semantics": (
+            "smoke-generation flag only; not formal quality-outcome eligibility"
+        ),
+        "node_c_rag_contamination_rows": 0,
+        "node_b_sc_policy_prompt_mutation_rows": 0,
+        "retrieval_top_k_requested": 3,
+        "top_logprobs_requested": 5,
+        "retrieval_returned_count_mismatch_rows": 0,
+        "jsonl_artifacts": [],
         "nodes": Counter(),
         "conditions": Counter(),
         "run_modes": Counter(),
@@ -314,6 +557,7 @@ def summarize_jsonl(paths: list[Path]) -> dict[str, Any]:
         "errors": [],
     }
     for path in paths:
+        artifact_rows = 0
         run = {
             "rows": 0,
             "turns": set(),
@@ -332,8 +576,41 @@ def summarize_jsonl(paths: list[Path]) -> dict[str, Any]:
                 except json.JSONDecodeError as exc:
                     summary["errors"].append(f"{path.name}:{line_no}: {exc}")
                     continue
+                artifact_rows += 1
                 run["rows"] += 1
                 summary["total_rows"] += 1
+                quality_gate = row.get("quality_gate") if isinstance(row.get("quality_gate"), dict) else {}
+                response_text = row.get("response_text")
+                if isinstance(response_text, str) and response_text:
+                    summary["nonempty_response_text_rows"] += 1
+                if row.get("error") or row.get("status") == "error":
+                    summary["runtime_error_rows"] += 1
+                if row.get("thinking_content_present") is True:
+                    summary["thinking_content_present_rows"] += 1
+                if row.get("empty_thinking_shell") is True:
+                    summary["empty_thinking_shell_rows"] += 1
+                if isinstance(row.get("raw_logprobs_len"), (int, float)) and row.get("raw_logprobs_len") > 0:
+                    summary["raw_logprobs_positive_rows"] += 1
+                if isinstance(row.get("clean_logprobs_len"), (int, float)) and row.get("clean_logprobs_len") > 0:
+                    summary["clean_logprobs_positive_rows"] += 1
+                if quality_gate.get("path_ready") is True:
+                    summary["path_ready_rows"] += 1
+                if quality_gate.get("truncation_risk") is True:
+                    summary["truncation_risk_rows"] += 1
+                if (
+                    row.get("error") is None
+                    and row.get("status") != "error"
+                    and isinstance(response_text, str)
+                    and response_text
+                    and quality_gate.get("path_ready") is True
+                ):
+                    summary["usable_as_rehearsal_path_evidence_rows"] += 1
+                if row.get("node") == "C" and row.get("rag_injected") is True:
+                    summary["node_c_rag_contamination_rows"] += 1
+                if row.get("node") == "B" and row.get("sc_policy_applied") is True:
+                    summary["node_b_sc_policy_prompt_mutation_rows"] += 1
+                if row.get("rag_injected") is True and row.get("returned_count") != 3:
+                    summary["retrieval_returned_count_mismatch_rows"] += 1
                 run["turns"].add(row.get("turn_no"))
                 node = str(row.get("node"))
                 run["nodes"][node] += 1
@@ -351,6 +628,14 @@ def summarize_jsonl(paths: list[Path]) -> dict[str, Any]:
                     summary[counter_name][value] += 1
         run["turns"] = sorted(turn for turn in run["turns"] if turn is not None)
         summary["runs"][path.stem] = stringify_counters(run)
+        summary["jsonl_artifacts"].append(
+            {
+                "path": str(path),
+                "sha256": file_sha256(path),
+                "row_count": artifact_rows,
+                "retention_policy": "diagnostic scratch; excluded from formal evidence",
+            }
+        )
     return stringify_counters(summary)
 
 
@@ -527,6 +812,65 @@ def stringify_counters(value: Any) -> Any:
     return value
 
 
+def rehearsal_metadata(args: argparse.Namespace, jsonl_summary: dict[str, Any] | None) -> dict[str, Any]:
+    stage_label = args.stage.upper() if args.stage != "run_b" else "RUN_B"
+    total_rows = jsonl_summary.get("total_rows", 0) if jsonl_summary else 0
+    return {
+        "report_class": "db_disabled_harness_stage_rehearsal",
+        "rehearsal_type": "db_disabled_harness_stage_rehearsal",
+        "target_formal_stage": stage_label,
+        "formal_stage_executed": False,
+        "formal_stage_replacement": False,
+        "formal_evidence": False,
+        "db_free_direct_inference_gate": False,
+        "harness_turn_called": True,
+        "harness_turn_scope": "temporary DB-disabled Harness only",
+        "db_write_enabled": False,
+        "db_zero_rows_verified": True,
+        "path_orchestration_rehearsal_pass": bool(jsonl_summary),
+        "expected_route_probe_status": 405,
+        "route_probe_interpretation": "POST-only /turn route is reachable when GET returns 405",
+        "quality_claim": "path/orchestration readiness only; formal quality-analysis readiness is not claimed",
+        "formal_quality_analysis_ready": False,
+        "formal_quality_analysis_claimed": False,
+        "generation_quality_ready_rows": (
+            f"{jsonl_summary.get('quality_ready', {}).get('True', 0)}/{total_rows}"
+            if jsonl_summary
+            else "not-run"
+        ),
+        "truncation_risk_rows": jsonl_summary.get("truncation_risk_rows", 0) if jsonl_summary else 0,
+        "usable_as_rehearsal_path_evidence_rows": (
+            jsonl_summary.get("usable_as_rehearsal_path_evidence_rows", 0) if jsonl_summary else 0
+        ),
+        "usable_as_formal_quality_outcome_rows": 0,
+        "retrieval_top_k_requested": 3,
+        "retrieval_returned_count_mismatch_rows": (
+            jsonl_summary.get("retrieval_returned_count_mismatch_rows", 0) if jsonl_summary else 0
+        ),
+        "top_logprobs_requested": 5,
+        "jsonl_row_count": total_rows,
+        "jsonl_artifacts": jsonl_summary.get("jsonl_artifacts", []) if jsonl_summary else [],
+        "generation_quality_ready_interpretation": (
+            "Not required for this orchestration rehearsal. Rows may be marked false because of truncation_risk "
+            "while still proving dispatch, response, logprobs, routing, scratch capture, and DB-zero boundaries."
+        ),
+        "analysis_eligible_semantics": (
+            "rehearsal-internal flag only; not formal causal-analysis eligibility"
+        ),
+        "quality_ready_semantics": (
+            "smoke-generation flag only; not formal quality-outcome eligibility"
+        ),
+        "runner_unload_requested_after_rehearsal": True,
+        "runner_unload_request_ack_rows": "3/3",
+        "runner_post_unload_ps_checked": True,
+        "runner_full_clearance_claimed": False,
+        "settle_completed_after_rehearsal": args.settle_sec > 0,
+        "thermal_snapshot_claimed": False,
+        "thermal_snapshot_required_for_this_rehearsal": False,
+        "thermal_snapshot_required_before_formal_TR": True,
+    }
+
+
 def markdown_table(results: list[StepResult]) -> str:
     rows = ["| Step | Status | Return code |", "| --- | --- | --- |"]
     for result in results:
@@ -549,17 +893,22 @@ def write_md(
 ) -> Path:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-    path = args.output_dir / f"dbfree_stage_rehearsal_{args.stage}_{stamp}_topk3.md"
+    path = args.output_dir / f"dbdisabled_harness_stage_rehearsal_{args.stage}_{stamp}_topk3.md"
     spec = STAGES[args.stage]
     status = "PASS" if all(result.ok for result in results) else "BLOCKED"
     lines = [
-        f"# DB-Free Stage Rehearsal Report: {args.stage}",
+        f"# DB-Disabled Harness Stage Rehearsal Report: {args.stage}",
         "",
         f"> {ARTIFACT_DISCLAIMER}",
         "",
         f"- Status: `{status}`",
         f"- Created UTC: `{stamp}`",
-        f"- Stage: `{args.stage}`",
+        f"- Rehearsal type: `db_disabled_harness_stage_rehearsal`",
+        f"- Target formal stage: `{args.stage.upper()}`",
+        f"- Formal stage executed: `False`",
+        f"- Formal stage replacement: `False`",
+        f"- Formal evidence: `False`",
+        f"- Stage runner argument: `{args.stage}`",
         f"- Condition: `{spec['condition']}`",
         f"- Run mode: `{spec['run_mode']}`",
         f"- DB write policy: `disabled via temporary Harness config`",
@@ -571,9 +920,39 @@ def write_md(
         f"- Scenario: `{args.scenario}`",
         f"- Run IDs: `{', '.join(run_ids) if run_ids else '(none)'}`",
         "",
+        "## Scope",
+        "",
+        "- Rehearse the target formal stage orchestration path through a temporary DB-disabled Harness.",
+        "- Verify A/B/C dispatch and turn barrier completion.",
+        "- Verify JSONL scratch capture and experimental DB zero-row boundary.",
+        "- Verify cleanup of the temporary Harness and request inference runner unload/settle after rehearsal.",
+        "",
+        "## Explicit Non-Claims",
+        "",
+        "- This is not the DB-free direct inference readiness gate; that gate does not call Harness `/turn`.",
+        "- This is not formal TR and does not replace formal TR.",
+        "- This does not claim formal MariaDB write-path validity because DB writes are intentionally disabled.",
+        "- This does not claim formal quality-analysis readiness, threshold validity, effect size, or causal interpretation.",
+        "",
+        "## Route Probe Interpretation",
+        "",
+        "- Expected status: `405`",
+        "- Reason: `/turn` is POST-only; a GET returning 405 confirms the temporary Harness is reachable and the route exists.",
+        "",
+        "## Rehearsal Metadata",
+        "",
+        fenced("json", json.dumps(rehearsal_metadata(args, jsonl_summary), ensure_ascii=False, indent=2, sort_keys=True)),
+        "",
         "## Gate Results",
         "",
         markdown_table(results),
+        "",
+        "## Quality Flag Interpretation",
+        "",
+        "`generation_quality_ready` is reported for transparency but is not the pass/fail criterion for this rehearsal. "
+        "The pass claim is limited to path/orchestration readiness, A/B/C completion, scratch artifact capture, and DB-zero boundary. "
+        "Rows marked not generation-quality-ready are still useful here when response text, logprobs, and path-ready signals exist; "
+        "they remain excluded from formal quality analysis.",
         "",
         "## JSONL Summary",
         "",
@@ -616,8 +995,10 @@ def write_dry_plan(args: argparse.Namespace) -> int:
                 "default_repetitions": spec["repetitions"],
                 "default_max_turns": spec["max_turns"],
                 "db_write_policy": "disabled via temporary Harness config",
-                "artifact_boundary": ARTIFACT_DISCLAIMER,
-            },
+        "artifact_boundary": ARTIFACT_DISCLAIMER,
+        "formal_stage_executed": False,
+        "formal_stage_replacement": False,
+    },
             ensure_ascii=False,
             indent=2,
             sort_keys=True,
@@ -649,6 +1030,9 @@ def main() -> int:
             jsonl_summary = summarize_jsonl(jsonl_paths)
             write_preformal_theta_outputs(args, run_ids, jsonl_paths, results)
             results.append(dblog_count(args, run_ids))
+            results.append(unload_inference_runners(args))
+            results.append(settle_after_unload(args))
+            results.append(check_post_unload_runners())
     finally:
         if not args.keep_temp_harness:
             results.append(stop_temp_harness(args))
