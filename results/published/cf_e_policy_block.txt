@@ -1,0 +1,11 @@
+[SC-PROTOCOL OPERATING POLICY]
+policy_id: sc_protocol_v1
+trigger: cf_e.external_payload_substituted_internal_cues_fixed
+rule: cf_e_internal_external_separation
+anchors: ["v1_full_guideline_table_safe__g05_src_b58feee9__c00158", "v1_full_guideline_table_safe__g07_src_ed51de70__c00408", "v1_full_guideline_table_safe__g02_src_3120b349__c00424"]
+evidence_sufficiency: sufficient
+response_mode: grounded_guidance_not_final_decision
+output_status: candidate_not_decision
+responsibility_boundary: final_decision_by_human_public_officer
+verification_required: ["applicant_facts", "local_procedure", "benefit_history"]
+[/SC-PROTOCOL OPERATING POLICY]

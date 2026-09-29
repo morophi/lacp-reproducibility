@@ -1,0 +1,170 @@
+{
+  "nodes": {
+    "A": {
+      "url": "http://inference-a:11434/api/chat",
+      "role": "rag_sc"
+    },
+    "B": {
+      "url": "http://inference-b:11434/api/chat",
+      "role": "rag_only"
+    },
+    "C": {
+      "url": "http://inference-c:11434/api/chat",
+      "role": "baseline"
+    }
+  },
+  "rag": {
+    "url": "http://rag:8000",
+    "host": "rag",
+    "port": 8000,
+    "collection": "lacp_docs_v1_full_guideline_table_safe_body_only_v1",
+    "top_k": 3,
+    "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  },
+  "harness": {
+    "host": "0.0.0.0",
+    "port": 9000
+  },
+  "model": {
+    "name": "qwen3-nothink",
+    "temperature": 0.0,
+    "seed": 42,
+    "thinking": false,
+    "num_predict": 512,
+    "request_timeout_sec": 240,
+    "endpoint_by_run_mode": {
+      "smoke": "openai_chat_completions",
+      "formal": "openai_chat_completions"
+    },
+    "request_logprobs": true,
+    "top_logprobs": 5,
+    "strip_empty_think_tags": true
+  },
+  "logging": {
+    "jsonl_fallback_dir": "/home/lacp/harness/logs/runs",
+    "db": {
+      "enabled": true,
+      "require_db": false,
+      "host": "dblog",
+      "port": 3306,
+      "user": "morophi",
+      "password": "[REDACTED]",
+      "database": "lacp_db_final",
+      "async_enabled": true,
+      "async_queue_maxsize": 1000,
+      "async_flush_timeout_s": 30
+    }
+  },
+  "run": {
+    "sc_enabled": true,
+    "default_mode": "formal",
+    "runtime_chain": "flashattention_off_cooldown60",
+    "bootstrap_first_turn": false,
+    "sc_without_rag": false,
+    "intervention_mode": "fixed_rag_exposure"
+  },
+  "run_modes": {
+    "smoke": {
+      "force_intervention_run_b": true,
+      "allow_null_metrics": true,
+      "require_metric_trigger": false,
+      "rag_top_k": 3,
+      "num_predict": 512,
+      "history_window_turns": 3
+    },
+    "formal": {
+      "force_intervention_run_b": false,
+      "allow_null_metrics": false,
+      "require_metric_trigger": true,
+      "num_predict": 512,
+      "request_timeout_sec": 240,
+      "request_logprobs": true,
+      "top_logprobs": 5,
+      "top_logprobs_candidates": [
+        1,
+        3,
+        5
+      ],
+      "history_window_turns": 3
+    }
+  },
+  "counterfactual": {
+    "cf_plan_id": "lacp_cf_scenario_plan_v4_cff_turnset_final",
+    "top_k": 3,
+    "cf_a": {
+      "mode": "rag_off_sc_off_baseline_replay",
+      "document_c_hash": "",
+      "document_d_hash": ""
+    },
+    "cf_b": {
+      "mode": "rag_only_forced_across_ab_sc_off"
+    },
+    "cf_c": {
+      "mode": "sc_only_rag_off"
+    },
+    "cf_d": {
+      "forced_turns": [
+        5,
+        15,
+        25
+      ]
+    },
+    "cf_e": {
+      "external_payload_query": "영유아 국가예방접종은 어디서 받을 수 있고 비용 지원 대상은 어떻게 확인하나요?",
+      "model_weights_fixed": true,
+      "external_payload_query_hash": "f9dc48207b4898d7e4916ed69f568957b8f0414a112f609440ad0b2c8849c503",
+      "external_payload_source": "excluded 보건의료(faq01) / 인구아동(faq03) domain; infant/child vaccination support query semantically distant from Run B civil-complaint pressure-layer turns",
+      "external_payload_freeze_manifest": "lacp_cf_e_external_payload_freeze_manifest_20260627.md",
+      "retrieval_chunk_freeze_status": "pending_live_rag_node_verification"
+    },
+    "cf_f": {
+      "condition_label": "default",
+      "seed": 424242,
+      "n": 10,
+      "non_trigger_eligible_turns": [],
+      "injection_turns": [
+        3,
+        6,
+        9,
+        12,
+        15,
+        18,
+        21,
+        24,
+        27,
+        29
+      ],
+      "turn_29_runtime_smoke_required": true,
+      "turn_30_forced": false
+    }
+  },
+  "metrics": {
+    "ma": {
+      "enabled": true,
+      "include_unclassified_in_denominator": true
+    },
+    "cds": {
+      "enabled": true,
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "reference_embedding_path": "/home/lacp/harness/reference/reference_embedding.npy",
+      "reference_embedding_hash_path": "/home/lacp/harness/reference/reference_embedding.sha256"
+    },
+    "lms": {
+      "enabled": true,
+      "theta_entropy": 0.0,
+      "allow_unavailable_for_trigger": false
+    },
+    "srr": {
+      "enabled": true,
+      "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "history_window_turns": 3,
+      "similarity_threshold": 0.85,
+      "ngram_overlap_threshold": 0.4
+    },
+    "sci": {
+      "enabled": true,
+      "baseline_transition_path": "/home/lacp/harness/reference/sci_cr2_node_c_transition_vector.json",
+      "fallback_method": "replacement_sentence_type_proportion"
+    }
+  }
+}

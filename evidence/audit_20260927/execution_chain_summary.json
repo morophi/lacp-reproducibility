@@ -1,0 +1,330 @@
+{
+  "log_files": 80,
+  "log_rows": 7200,
+  "formal_runs": 80,
+  "formal_rows": 7200,
+  "checks": {
+    "response_matches": 7200,
+    "metrics_match": 7200,
+    "status_match": 7200,
+    "payload_hash_matches_log": 7200,
+    "scenario_utterance_found": 7200,
+    "configured_history_matches": 7200,
+    "used_history_matches": 7200,
+    "sc_block_hash_matches": 7200,
+    "policy_hash_matches": 7200,
+    "prompt_hash_reconstructed_match": 7200,
+    "payload_hash_reconstructed_match": 7200,
+    "message_count_reconstructed_match": 7200,
+    "final_prompt_chars_reconstructed_match": 7200,
+    "rag_context_chars_reconstructed_match": 7200,
+    "sc_block_chars_reconstructed_match": 7200,
+    "chunk_lengths_match": 7200
+  },
+  "full_request_or_token_candidate_fields_in_formal_jsonl": [],
+  "jsonl_top_level_fields": [
+    "acceptance_status",
+    "analysis_eligible",
+    "block_type_distribution",
+    "cf_f_default_set",
+    "cf_plan_id",
+    "chunk_lengths",
+    "clean_logprobs_len",
+    "cleaning_allowed",
+    "cleaning_applied",
+    "collection_name",
+    "condition",
+    "configured_rag_top_k",
+    "corpus_hash",
+    "corpus_version",
+    "cr2_routing_active",
+    "created_at",
+    "elapsed_ms",
+    "empty_thinking_shell",
+    "endpoint_mode",
+    "exclude_from_causal_trigger",
+    "excluded_token_positions",
+    "failed_TR",
+    "failure_reason",
+    "final_prompt_chars",
+    "forced_turn_set",
+    "generation_quality_ready",
+    "harness_version",
+    "history_eligible",
+    "history_exclusion_reason",
+    "history_turns_used",
+    "history_window_turns_configured",
+    "message_count",
+    "metric_status",
+    "metrics",
+    "model_name",
+    "node",
+    "node_config_hash",
+    "node_role",
+    "num_predict",
+    "payload_hash",
+    "physical_node_url",
+    "policy_hash",
+    "previous_turn_used_for_trigger",
+    "prompt_chars",
+    "prompt_contains_sc_marker",
+    "prompt_hash",
+    "quality_gate",
+    "quality_retry_attempted",
+    "quality_retry_final_invalid_reason",
+    "quality_retry_first_contamination_spans",
+    "quality_retry_first_elapsed_ms",
+    "quality_retry_first_response_hash",
+    "quality_retry_first_response_raw_hash",
+    "quality_retry_policy",
+    "quality_retry_reason",
+    "rag_chunk_ids",
+    "rag_context_chars",
+    "rag_injected",
+    "rag_query_hash",
+    "raw_logprobs_len",
+    "raw_response_keys",
+    "removed_prefix_chars",
+    "request_logprobs",
+    "response_hash",
+    "response_text",
+    "response_text_raw_hash",
+    "retrieval_audit_required",
+    "retrieval_method",
+    "retrieved_chunk_ids",
+    "retrieved_chunk_ids_hash",
+    "returned_count",
+    "run_id",
+    "run_mode",
+    "run_mode_rag_top_k",
+    "run_policy_hash",
+    "run_sc_policy_id",
+    "runtime_chain",
+    "sc_block_chars",
+    "sc_block_hash",
+    "sc_evidence_sufficiency",
+    "sc_policy_anchor_chunk_ids",
+    "sc_policy_applied",
+    "sc_policy_id",
+    "sc_policy_payload",
+    "sc_response_mode",
+    "sc_responsibility_boundary_applied",
+    "sc_trigger_reason",
+    "sc_trigger_rule_id",
+    "sc_triggered",
+    "sc_verification_required",
+    "scenario_hash",
+    "scenario_id",
+    "seed",
+    "source_file",
+    "stage",
+    "table_exposure",
+    "temperature",
+    "theta_locked",
+    "theta_source",
+    "thinking_content_present",
+    "thinking_disabled_requested",
+    "thinking_tag_present",
+    "threshold_snapshot",
+    "top_k",
+    "top_logprobs",
+    "trigger_eligible",
+    "trigger_mode",
+    "trigger_reasons",
+    "trigger_source_nodes",
+    "turn_29_runtime_smoke_required",
+    "turn_30_forced",
+    "turn_no",
+    "usable_as_quality_outcome",
+    "utterance_hash"
+  ],
+  "policy_hash": "eefebb7325534333275674ae88404bfc60a68e0246b46614dcf238ccd246042a",
+  "prompt_template_versions": [
+    {
+      "stage": "cf_a",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 450
+    },
+    {
+      "stage": "cf_b",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 450
+    },
+    {
+      "stage": "cf_c",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 450
+    },
+    {
+      "stage": "cf_d",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 450
+    },
+    {
+      "stage": "cf_e",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 450
+    },
+    {
+      "stage": "cf_f",
+      "prompt_template_version": "current_20260630",
+      "rows": 900
+    },
+    {
+      "stage": "cr",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 900
+    },
+    {
+      "stage": "cr2",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 450
+    },
+    {
+      "stage": "run_b",
+      "prompt_template_version": "git_1345861_20260614",
+      "rows": 2700
+    }
+  ],
+  "matched_policy_artifacts": {
+    "eefebb7325534333275674ae88404bfc60a68e0246b46614dcf238ccd246042a": "harness/harness/config/sc_policy.yaml",
+    "5c4a45c506b7383d143306ef9c357b9ae0a3a79be6ff33e7437f4108df8d0c75": "harness/harness/config/sc_policy.yaml.bak.topk3.20260601T031529Z",
+    "bc3a9569e55984ff3d0a01fd122e8f5a5e88455a4757f9968b1580f78642a3b0": "harness/harness/backups/sc_core_alignment_20260612/sc_policy.yaml.bak"
+  },
+  "config_hash_matched_runs": 80,
+  "trigger_checks": {
+    "decisions": 900,
+    "matches": 900,
+    "reason_matches": 900,
+    "source_nodes_matches": 900,
+    "applied": 90,
+    "turns": [
+      8,
+      20,
+      25
+    ]
+  },
+  "calibration": [
+    {
+      "runs": 3,
+      "metric": "lms",
+      "entropy_q70": 0.316624716242737,
+      "A_C_q95": 0.5511044432794805,
+      "B_C_q95": 0.5487527163065844,
+      "pooled_q95": 0.5488703026552292,
+      "max_of_pair_q95": 0.5511044432794805,
+      "deployed": 0.5488703026552293,
+      "abs_error": 1.1102230246251565e-16
+    },
+    {
+      "runs": 3,
+      "metric": "cds",
+      "entropy_q70": 0.316624716242737,
+      "A_C_q95": 0.17595228552818298,
+      "B_C_q95": 0.16746202111244202,
+      "pooled_q95": 0.16788653433322892,
+      "max_of_pair_q95": 0.17595228552818298,
+      "deployed": 0.16788653433322917,
+      "abs_error": 2.498001805406602e-16
+    },
+    {
+      "runs": 3,
+      "metric": "ma",
+      "entropy_q70": 0.316624716242737,
+      "A_C_q95": 0.6666666666666667,
+      "B_C_q95": 0.6666666666666666,
+      "pooled_q95": 0.6666666666666667,
+      "max_of_pair_q95": 0.6666666666666667,
+      "deployed": 0.6666666666666667,
+      "abs_error": 0.0
+    },
+    {
+      "runs": 5,
+      "metric": "lms",
+      "entropy_q70": 0.316624716242737,
+      "A_C_q95": 0.5511044432794805,
+      "B_C_q95": 0.5487527163065844,
+      "pooled_q95": 0.5488703026552292,
+      "max_of_pair_q95": 0.5511044432794805,
+      "deployed": 0.5488703026552293,
+      "abs_error": 1.1102230246251565e-16
+    },
+    {
+      "runs": 5,
+      "metric": "cds",
+      "entropy_q70": 0.316624716242737,
+      "A_C_q95": 0.17595228552818298,
+      "B_C_q95": 0.16746202111244202,
+      "pooled_q95": 0.16788653433322917,
+      "max_of_pair_q95": 0.17595228552818298,
+      "deployed": 0.16788653433322917,
+      "abs_error": 0.0
+    },
+    {
+      "runs": 5,
+      "metric": "ma",
+      "entropy_q70": 0.316624716242737,
+      "A_C_q95": 0.6666666666666667,
+      "B_C_q95": 0.6666666666666666,
+      "pooled_q95": 0.6666666666666667,
+      "max_of_pair_q95": 0.6666666666666667,
+      "deployed": 0.6666666666666667,
+      "abs_error": 0.0
+    }
+  ],
+  "sensitivity": [
+    {
+      "mode": "both_max",
+      "decisions": 900,
+      "changed": 1,
+      "retained_applied": 89,
+      "new_applied": 0,
+      "changed_rows": [
+        {
+          "mode": "both_max",
+          "run_id": "run_b_neo_excute_#6_20260626T095614KST",
+          "turn": 20,
+          "stored": true,
+          "alternative": false,
+          "changed": true,
+          "theta_lms": 0.5511044432794805,
+          "theta_cds": 0.17595228552818298
+        }
+      ]
+    },
+    {
+      "mode": "cds_only_max",
+      "decisions": 900,
+      "changed": 1,
+      "retained_applied": 89,
+      "new_applied": 0,
+      "changed_rows": [
+        {
+          "mode": "cds_only_max",
+          "run_id": "run_b_neo_excute_#6_20260626T095614KST",
+          "turn": 20,
+          "stored": true,
+          "alternative": false,
+          "changed": true,
+          "theta_lms": 0.5488703026552293,
+          "theta_cds": 0.17595228552818298
+        }
+      ]
+    },
+    {
+      "mode": "lms_only_max",
+      "decisions": 900,
+      "changed": 0,
+      "retained_applied": 90,
+      "new_applied": 0,
+      "changed_rows": []
+    }
+  ],
+  "deployed_theta_snapshot_matches": 5850,
+  "deployed_theta_snapshot_rows": 5850,
+  "empty_provenance_fields": {
+    "harness_version_runs": 80,
+    "metric_pipeline_version_rows": 7200,
+    "model_digest_rows": 7200
+  }
+}

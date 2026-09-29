@@ -1,0 +1,38 @@
+[
+  {
+    "relation": "experiment_runs",
+    "rows": 96,
+    "sha256": "fb4166615a6f81e5f767a774eba19ff9b973a823dc25e59d925c8798bc441d57",
+    "hash_matches": true
+  },
+  {
+    "relation": "intervention_logs",
+    "rows": 8568,
+    "sha256": "0169ed0d409f828cccafa4e9c666a0b7d6d1c0cb7a7979a054cfcfea5069daa9",
+    "hash_matches": true
+  },
+  {
+    "relation": "metric_logs",
+    "rows": 8568,
+    "sha256": "2d5b5719d7531a62eeeceba0e060b62bf1a6b4f8809ad0fee99b38d797dd3040",
+    "hash_matches": true
+  },
+  {
+    "relation": "payload_audit_logs",
+    "rows": 8568,
+    "sha256": "aef1a002509a395a42ab07bdb2b0b603048d076feeda42cae38cc451dc79799c",
+    "hash_matches": true
+  },
+  {
+    "relation": "rag_retrieval_logs",
+    "rows": 3382,
+    "sha256": "06b34f7b3f86f5960d9c81a5b9e51555c61d412385bcbe789247a2a04ee2ff16",
+    "hash_matches": true
+  },
+  {
+    "relation": "turn_node_logs",
+    "rows": 8568,
+    "sha256": "ad1282335f3590c6a3e41fbf1db9a894949f7b058fdf6d40ec39cbdc3149ce24",
+    "hash_matches": true
+  }
+]

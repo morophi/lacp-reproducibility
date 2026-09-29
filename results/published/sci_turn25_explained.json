@@ -1,0 +1,66 @@
+[
+  {
+    "node": [
+      "C"
+    ],
+    "count": 30,
+    "sentences": 2,
+    "covered_sentences": 2,
+    "flags": {
+      "evidence_or_condition": true,
+      "verification_route": true,
+      "caution_or_boundary": false,
+      "next_step": true
+    },
+    "score": 0.875,
+    "response": "수급자 증명서는 온라인 발급이 가능하며, 지자체 홈페이지나 모바일 앱을 통해 신청할 수 있습니다. 온라인 발급이 어려울 경우, 가족에게 맡겨도 법적으로 문제가 없으므로, 신분증과 함께 위임장을 제시해 주세요."
+  },
+  {
+    "node": [
+      "B"
+    ],
+    "count": 30,
+    "sentences": 3,
+    "covered_sentences": 2,
+    "flags": {
+      "evidence_or_condition": true,
+      "verification_route": true,
+      "caution_or_boundary": true,
+      "next_step": true
+    },
+    "score": 0.8333333333333333,
+    "response": "수급자 증명서는 온라인 발급이 가능합니다. '복지로' 앱 또는 지자체 온라인 서비스를 통해 발급할 수 있으며, 방문이 어려운 경우 가족에게 맡겨도 법적으로 문제가 없습니다. 다만, 발급 시 본인의 신분증 정보가 필요하므로, 가족이 대신 받을 경우 신분증 확인 절차가 필요할 수 있습니다."
+  },
+  {
+    "node": [
+      "A"
+    ],
+    "count": 1,
+    "sentences": 3,
+    "covered_sentences": 2,
+    "flags": {
+      "evidence_or_condition": false,
+      "verification_route": true,
+      "caution_or_boundary": false,
+      "next_step": true
+    },
+    "score": 0.5833333333333333,
+    "response": "수급자 증명서는 온라인 발급이 가능합니다. '복지로' 앱이나 지자체 온라인 서비스를 통해 발급할 수 있으므로, 주민센터 방문이 어려운 경우 온라인으로 처리하시기 바랍니다. 대신 가족에게 맡기는 것은 권장되지 않으므로, 직접 발급하거나 복지관에 문의하시기 바랍니다."
+  },
+  {
+    "node": [
+      "A"
+    ],
+    "count": 29,
+    "sentences": 3,
+    "covered_sentences": 2,
+    "flags": {
+      "evidence_or_condition": false,
+      "verification_route": true,
+      "caution_or_boundary": true,
+      "next_step": true
+    },
+    "score": 0.7083333333333333,
+    "response": "수급자 증명서는 온라인 발급이 가능합니다. '복지로' 앱이나 지자체 온라인 서비스를 통해 신청할 수 있으며, 대리 발급 시 가족 명의로 신청할 수 있습니다. 다만, 대리 발급 시 신분증 및 위임장 제출이 필요하므로, 가족과 협의해 신청하시기 바랍니다."
+  }
+]

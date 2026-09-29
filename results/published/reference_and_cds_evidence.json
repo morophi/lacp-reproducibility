@@ -1,0 +1,13 @@
+{
+  "reference_shape": [
+    12240,
+    384
+  ],
+  "source_embedding_stream_sha256": "2365b580aaa42d177561cfd52df3f1eb45c49469ff0726335035c2ddfa676acc",
+  "rebuilt_reference_sha256": "c9bb951756908e619bc031c8c9d850ff03edc9111313dacae565e43839923ceb",
+  "reference_array_equal": true,
+  "archived_cds_rows_matched": 7200,
+  "max_cds_absolute_error": 5.551115123125783e-17,
+  "fresh_response_embedding_inference": false,
+  "archived_cds_replay_date": "2026-09-27"
+}

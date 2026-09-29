@@ -1,0 +1,38 @@
+[
+  {
+    "table": "experiment_runs",
+    "live_rows": 96,
+    "archived_rows": 96,
+    "byte_identical_to_archive": true
+  },
+  {
+    "table": "intervention_logs",
+    "live_rows": 8568,
+    "archived_rows": 8568,
+    "byte_identical_to_archive": true
+  },
+  {
+    "table": "metric_logs",
+    "live_rows": 8568,
+    "archived_rows": 8568,
+    "byte_identical_to_archive": true
+  },
+  {
+    "table": "payload_audit_logs",
+    "live_rows": 8568,
+    "archived_rows": 8568,
+    "byte_identical_to_archive": true
+  },
+  {
+    "table": "rag_retrieval_logs",
+    "live_rows": 3382,
+    "archived_rows": 3382,
+    "byte_identical_to_archive": true
+  },
+  {
+    "table": "turn_node_logs",
+    "live_rows": 8568,
+    "archived_rows": 8568,
+    "byte_identical_to_archive": true
+  }
+]

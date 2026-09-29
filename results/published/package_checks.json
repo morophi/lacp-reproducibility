@@ -1,0 +1,9 @@
+{
+  "relative_markdown_links": "PASS",
+  "python_syntax": "PASS",
+  "credential_signature_scan": "PASS",
+  "source_artifact_checksums": "PASS",
+  "files_over_100MiB": [],
+  "largest_file_bytes": 18800768,
+  "note": "Pattern scan plus selected-file review; no guarantee that any automatic secret scan detects every possible sensitive value."
+}

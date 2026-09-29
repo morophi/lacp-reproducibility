@@ -1,0 +1,134 @@
+{
+  "rows": 7200,
+  "unique_responses_replayed": 399,
+  "checks": {
+    "response_hash_matches": 7200,
+    "ma_matches": 7200,
+    "srr_matches": 7200,
+    "sci_matches": 7200,
+    "srr_boundary_matches": 7200,
+    "srr_final_matches": 7200,
+    "sci_components_match": 7200,
+    "lms_selection_count_matches": 7200,
+    "lms_mean_matches": 7200
+  },
+  "maximum_absolute_errors": {
+    "ma_assert_error": 0.0,
+    "ma_epist_error": 0.0,
+    "ma_hedge_error": 0.0,
+    "sent_count_error": 0.0,
+    "srr_error": 0.0,
+    "sci_error": 5.551115123125783e-17,
+    "lms_mean_error": 1.7763568394002505e-15
+  },
+  "by_stage": {
+    "cf_a": {
+      "rows": 450,
+      "response_hash_matches": 450,
+      "ma_matches": 450,
+      "srr_matches": 450,
+      "sci_matches": 450,
+      "srr_boundary_matches": 450,
+      "srr_final_matches": 450,
+      "sci_components_match": 450,
+      "lms_selection_count_matches": 450,
+      "lms_mean_matches": 450
+    },
+    "cf_b": {
+      "rows": 450,
+      "response_hash_matches": 450,
+      "ma_matches": 450,
+      "srr_matches": 450,
+      "sci_matches": 450,
+      "srr_boundary_matches": 450,
+      "srr_final_matches": 450,
+      "sci_components_match": 450,
+      "lms_selection_count_matches": 450,
+      "lms_mean_matches": 450
+    },
+    "cf_c": {
+      "rows": 450,
+      "response_hash_matches": 450,
+      "ma_matches": 450,
+      "srr_matches": 450,
+      "sci_matches": 450,
+      "srr_boundary_matches": 450,
+      "srr_final_matches": 450,
+      "sci_components_match": 450,
+      "lms_selection_count_matches": 450,
+      "lms_mean_matches": 450
+    },
+    "cf_d": {
+      "rows": 450,
+      "response_hash_matches": 450,
+      "ma_matches": 450,
+      "srr_matches": 450,
+      "sci_matches": 450,
+      "srr_boundary_matches": 450,
+      "srr_final_matches": 450,
+      "sci_components_match": 450,
+      "lms_selection_count_matches": 450,
+      "lms_mean_matches": 450
+    },
+    "cf_e": {
+      "rows": 450,
+      "response_hash_matches": 450,
+      "ma_matches": 450,
+      "srr_matches": 450,
+      "sci_matches": 450,
+      "srr_boundary_matches": 450,
+      "srr_final_matches": 450,
+      "sci_components_match": 450,
+      "lms_selection_count_matches": 450,
+      "lms_mean_matches": 450
+    },
+    "cf_f": {
+      "rows": 900,
+      "response_hash_matches": 900,
+      "ma_matches": 900,
+      "srr_matches": 900,
+      "sci_matches": 900,
+      "srr_boundary_matches": 900,
+      "srr_final_matches": 900,
+      "sci_components_match": 900,
+      "lms_selection_count_matches": 900,
+      "lms_mean_matches": 900
+    },
+    "cr": {
+      "rows": 900,
+      "response_hash_matches": 900,
+      "ma_matches": 900,
+      "srr_matches": 900,
+      "sci_matches": 900,
+      "srr_boundary_matches": 900,
+      "srr_final_matches": 900,
+      "sci_components_match": 900,
+      "lms_selection_count_matches": 900,
+      "lms_mean_matches": 900
+    },
+    "cr2": {
+      "rows": 450,
+      "response_hash_matches": 450,
+      "ma_matches": 450,
+      "srr_matches": 450,
+      "sci_matches": 450,
+      "srr_boundary_matches": 450,
+      "srr_final_matches": 450,
+      "sci_components_match": 450,
+      "lms_selection_count_matches": 450,
+      "lms_mean_matches": 450
+    },
+    "run_b": {
+      "rows": 2700,
+      "response_hash_matches": 2700,
+      "ma_matches": 2700,
+      "srr_matches": 2700,
+      "sci_matches": 2700,
+      "srr_boundary_matches": 2700,
+      "srr_final_matches": 2700,
+      "sci_components_match": 2700,
+      "lms_selection_count_matches": 2700,
+      "lms_mean_matches": 2700
+    }
+  }
+}

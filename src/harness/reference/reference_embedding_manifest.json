@@ -1,0 +1,16 @@
+{
+  "artifact_policy": "offline RAG/corpus freeze artifact; Harness consumes read-only",
+  "artifact_role": "cds_reference_embedding",
+  "collection_count": 12240,
+  "collection_name": "lacp_docs_v1_full_guideline_table_safe_body_only_v1",
+  "embedded_vectors": 12240,
+  "embedding_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "generation_method": "mean of stored Chroma embeddings, L2-normalized",
+  "output": "/home/lacp/reference_build_stored/reference_embedding.npy",
+  "output_sha256": "c9bb951756908e619bc031c8c9d850ff03edc9111313dacae565e43839923ceb",
+  "sample_metadata_hash": "3ad9e1748762a97aa49bcc821fac22df12fceb184dff9abe75eb061fc9d4bb5f",
+  "shape": [
+    384
+  ],
+  "source_embedding_stream_sha256": "2365b580aaa42d177561cfd52df3f1eb45c49469ff0726335035c2ddfa676acc"
+}

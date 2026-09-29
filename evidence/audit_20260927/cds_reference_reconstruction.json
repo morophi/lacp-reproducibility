@@ -1,0 +1,15 @@
+{
+  "rows": 12240,
+  "shape": [
+    12240,
+    384
+  ],
+  "dtype": "float32",
+  "matrix_file_sha256": "8e181b5f7e89f2fa1ab25c6d04aeb1a3e21abdb9bb6fba177ddc9ed4e485fb51",
+  "matrix_stream_sha256": "2365b580aaa42d177561cfd52df3f1eb45c49469ff0726335035c2ddfa676acc",
+  "manifest_stream_sha256": "2365b580aaa42d177561cfd52df3f1eb45c49469ff0726335035c2ddfa676acc",
+  "reference_max_error": 0.0,
+  "reference_array_equal": true,
+  "rebuilt_reference_file_sha256": "c9bb951756908e619bc031c8c9d850ff03edc9111313dacae565e43839923ceb",
+  "stored_reference_file_sha256": "c9bb951756908e619bc031c8c9d850ff03edc9111313dacae565e43839923ceb"
+}

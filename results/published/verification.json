@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "reference_tables_matched": [
+    "main_contrasts.csv",
+    "trigger_contrasts.csv",
+    "cf_contrasts.csv",
+    "routing.csv",
+    "response_reproducibility.csv",
+    "run_mean_dispersion.csv",
+    "turn_mean_dispersion.csv"
+  ],
+  "formal_runs": 80,
+  "formal_rows": 7200,
+  "run_b_runs": 30,
+  "run_b_rows": 2700,
+  "metric_replay_all_rows_match": true,
+  "prompt_and_payload_reconstruction_all_rows_match": true,
+  "trigger_decisions_matched": 900,
+  "fresh_response_embedding_inference": false,
+  "new_llm_generations": 0,
+  "comparison_atol": 1e-12,
+  "python": "3.12.14",
+  "packages": {
+    "numpy": "2.3.5",
+    "pandas": "2.2.3"
+  }
+}

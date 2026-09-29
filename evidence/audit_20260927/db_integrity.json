@@ -1,0 +1,29 @@
+{
+  "runs": 96,
+  "turn_rows": 8568,
+  "accepted_formal_runs": 80,
+  "accepted_formal_rows": 7200,
+  "stage_counts": {
+    "cf_a": 5,
+    "cf_b": 5,
+    "cf_c": 5,
+    "cf_d": 5,
+    "cf_e": 5,
+    "cf_f": 10,
+    "cr": 10,
+    "cr2": 5,
+    "run_b": 30
+  },
+  "unique_turn_keys": true,
+  "turn_orphan_runs": 0,
+  "metric_orphans": 0,
+  "metric_unique_keys": true,
+  "metric_rows": 8568,
+  "payload_rows": 8568,
+  "intervention_rows": 8568,
+  "rag_rows": 3382,
+  "formal_three_nodes_thirty_turns": true,
+  "metric_all_turns_covered": true,
+  "payload_all_turns_covered": true,
+  "intervention_all_turns_covered": true
+}

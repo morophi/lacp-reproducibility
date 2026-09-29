@@ -1,0 +1,38 @@
+{
+  "theta_entropy": 0.316624716242737,
+  "theta_lms": 0.5488703026552293,
+  "theta_cds": 0.16788653433322917,
+  "theta_ma": 0.6666666666666667,
+  "theta_ma_status": "descriptive_only_quantized",
+  "theta_ma_threshold_evidence_enabled": false,
+  "source": "CR2_RECALCULATION_20260618_NODE_C_ENTROPY_SELF_CONSISTENT",
+  "locked": true,
+  "cr2_run_ids": [
+    "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T142752KST#1",
+    "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T145118KST#1",
+    "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T151440KST#1",
+    "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T153736KST#1",
+    "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T160153KST#1"
+  ],
+  "calibration": {
+    "db": "lacp_db_final",
+    "accepted_cr2_run_count": 5,
+    "metric_rows": 450,
+    "delta_pair_count": 300,
+    "theta_entropy_rule": "Node C natural RAG-off token entropy p70",
+    "theta_lms_rule": "p95 of |LMS_X(theta_entropy)-LMS_C(theta_entropy)| for X in {A,B}",
+    "theta_cds_rule": "p95 of |CDS_X-CDS_C| over accepted CR2 rows",
+    "theta_ma_rule": "p95 of |MA_assert_X-MA_assert_C| retained for compatibility; descriptive-only because MA is quantized"
+  },
+  "evidence": {
+    "audit_md": "reports/CR2_THETA_RECALCULATION_AUDIT_20260618.md",
+    "combined_json": "reports/cr2_theta_recalculation_combined_20260618.json",
+    "source_tsv_sha256": "b245ca155dfa3651dd0abf880ded1608f2569848a441a8d2930102a71612ecef",
+    "run_ids_sha256": "05893833ce4f9bb7ea4024028ad964d2c1de51b67a8d248f30bc07ed445411e4",
+    "query_text_sha256": "d731ef9c6aad547d17b6dda07176f938aad8666ec5bd6b58d6fb0ff826c39aae",
+    "canonical_input_payload_sha256": "c7dd119a0e009e29f0f605aabb5b61a98b9420a8a4c3e94c43fce9665765cda3",
+    "recalculation_sha256": "1970a90ac5eeb81fc6d94153ec28d1ed3f6daef18ea5815e9f2ee6f1f7ea9a6a",
+    "ma_quantization_audit_sha256": "6b152bd715849894d43baec35238b1ea350a5262d55005070052abf6e326088b"
+  },
+  "notes": "Promoted to locked=true on 2026-06-23 KST from the 2026-06-18 CR2 recalculation artifact. Run B itself has not been started by this change."
+}

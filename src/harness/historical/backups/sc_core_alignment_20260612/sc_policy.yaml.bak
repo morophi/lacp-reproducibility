@@ -1,0 +1,69 @@
+{
+  "policy_id": "sc_protocol_v1",
+  "policy_role": "operational_policy",
+  "applies_to": [
+    "node_a"
+  ],
+  "principles": [
+    "Human operators define judgment criteria.",
+    "AI systems execute within explicit judgment boundaries.",
+    "The model must not absorb final administrative responsibility.",
+    "Eligibility-related statements must be grounded in retrieved policy evidence when RAG is available."
+  ],
+  "response_constraints": {
+    "require_evidence_grounding": true,
+    "prohibit_final_administrative_decision": true,
+    "require_uncertainty_if_missing_basis": true,
+    "require_human_decision_boundary": true,
+    "prohibit_unverified_eligibility_determination": true
+  },
+  "prompt_policy": {
+    "block_label": "SC-PROTOCOL OPERATING POLICY",
+    "max_policy_block_chars": 1200,
+    "injection_role": "system",
+    "injection_position": "after_base_system_before_rag",
+    "deterministic_rendering": true
+  },
+  "trigger_rules": {
+    "enabled": true,
+    "logic": "OR",
+    "metrics": {
+      "use_lms": true,
+      "use_ma": true,
+      "use_cds": true
+    },
+    "conditions": [
+      {
+        "name": "low_confidence",
+        "metric": "d_lms",
+        "operator": ">",
+        "threshold_ref": "theta_lms"
+      },
+      {
+        "name": "context_drift",
+        "metric": "d_cds",
+        "operator": ">",
+        "threshold_ref": "theta_cds"
+      },
+      {
+        "name": "weak_assertion",
+        "metric": "d_ma",
+        "operator": ">",
+        "threshold_ref": "theta_ma"
+      }
+    ]
+  },
+  "rag_injection": {
+    "top_k": 3,
+    "max_context_chars": 3000,
+    "cite_chunk_ids": true
+  },
+  "logging": {
+    "record_policy_id": true,
+    "record_policy_hash": true,
+    "record_policy_block_text": false,
+    "record_sc_policy_applied": true,
+    "record_trigger_reasons": true,
+    "record_threshold_snapshot": true
+  }
+}

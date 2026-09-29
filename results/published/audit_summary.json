@@ -1,0 +1,254 @@
+{
+  "formal_rows": 7200,
+  "run_b_rows": 2700,
+  "cf_rows": 3150,
+  "formal_cr2_rows": 450,
+  "lms_aggregation_checked_rows": 7200,
+  "lms_mean_max_absolute_error": 1.7763568394002505e-15,
+  "ma_denominator_checked_rows": 7200,
+  "ma_denominator_max_absolute_error": 3.3306690738754696e-16,
+  "reproducibility": {
+    "cells": 90,
+    "single_hash_cells": 65,
+    "max_distinct_hashes": 2,
+    "modal_matches": 2675,
+    "total_responses": 2700,
+    "mean_pairwise_agreement": 0.9814814814814816
+  },
+  "frozen_threshold_snapshots": [
+    {
+      "rows": 5850,
+      "snapshot": {
+        "locked": true,
+        "source": "CR2_RECALCULATION_20260618_NODE_C_ENTROPY_SELF_CONSISTENT",
+        "theta_cds": 0.16788653433322917,
+        "theta_entropy": 0.316624716242737,
+        "theta_lms": 0.5488703026552293,
+        "theta_ma": 0.6666666666666667,
+        "theta_ma_status": "descriptive_only_quantized",
+        "theta_ma_threshold_evidence_enabled": false
+      }
+    }
+  ],
+  "history": [
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 0,
+      "message_count": 2,
+      "rows": 30
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 0,
+      "message_count": 3,
+      "rows": 60
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 1,
+      "message_count": 4,
+      "rows": 30
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 1,
+      "message_count": 5,
+      "rows": 60
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 2,
+      "message_count": 6,
+      "rows": 30
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 2,
+      "message_count": 7,
+      "rows": 60
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 3,
+      "message_count": 8,
+      "rows": 810
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 3,
+      "message_count": 9,
+      "rows": 1530
+    },
+    {
+      "history_window_turns_configured": 3,
+      "history_turns_used": 3,
+      "message_count": 10,
+      "rows": 90
+    }
+  ],
+  "formal_run_ids": {
+    "cf_a": [
+      "cf_a_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T091002KST#1",
+      "cf_a_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T092657KST#2",
+      "cf_a_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T094349KST#3",
+      "cf_a_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T100040KST#4",
+      "cf_a_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T101731KST#5"
+    ],
+    "cf_b": [
+      "cf_b_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T105343KST#1",
+      "cf_b_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T111448KST#2",
+      "cf_b_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T113551KST#3",
+      "cf_b_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T115656KST#4",
+      "cf_b_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T121803KST#5"
+    ],
+    "cf_c": [
+      "cf_c_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T130258KST#1",
+      "cf_c_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T132017KST#2",
+      "cf_c_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T133737KST#3",
+      "cf_c_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T135456KST#4",
+      "cf_c_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T141215KST#5"
+    ],
+    "cf_d": [
+      "cf_d_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T145355KST#1",
+      "cf_d_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T151128KST#2",
+      "cf_d_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T152901KST#3",
+      "cf_d_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T154636KST#4",
+      "cf_d_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T160409KST#5"
+    ],
+    "cf_e": [
+      "cf_e_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T164522KST#1",
+      "cf_e_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T170407KST#2",
+      "cf_e_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T172255KST#3",
+      "cf_e_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T174142KST#4",
+      "cf_e_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T180030KST#5"
+    ],
+    "cf_f": [
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T194500KST#1",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T200400KST#2",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T202300KST#3",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T204204KST#4",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T210107KST#5",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T212010KST#6",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T213914KST#7",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T215817KST#8",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T221720KST#9",
+      "cf_f_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260630T223624KST#10"
+    ],
+    "cr": [
+      "cr_1st_20260617T002515Z#1",
+      "cr_1st_20260617T101709KST#2",
+      "cr_1st_20260617T103730KST#3",
+      "cr_1st_20260617T111722KST#4",
+      "cr_1st_20260617T114243KST#5",
+      "cr_1st_20260617T121722KST#6",
+      "cr_1st_20260617T124244KST#7",
+      "cr_1st_20260617T130806KST#8",
+      "cr_1st_20260617T133328KST#9",
+      "cr_1st_20260617T135850KST#10"
+    ],
+    "cr2": [
+      "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T142752KST#1",
+      "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T145118KST#1",
+      "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T151440KST#1",
+      "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T153736KST#1",
+      "cr2_rev9_10_A-ragsc_B-ragonly_C-baseline_np512_hist3_20260618T160153KST#1"
+    ],
+    "run_b": [
+      "run_b_neo_excute_#1_20260625T174811KST",
+      "run_b_neo_excute_#2_20260625T180826KST",
+      "run_b_neo_excute_#3_20260625T182845KST",
+      "run_b_neo_excute_#4_20260625T184902KST",
+      "run_b_neo_excute_#5_20260625T190921KST",
+      "run_b_neo_excute_#6_20260626T095614KST",
+      "run_b_neo_excute_#7_20260626T101630KST",
+      "run_b_neo_excute_#8_20260626T103649KST",
+      "run_b_neo_excute_#9_20260626T105708KST",
+      "run_b_neo_excute_#10_20260626T111728KST",
+      "run_b_neo_excute_#11_20260626T120149KST",
+      "run_b_neo_excute_#12_20260626T122209KST",
+      "run_b_neo_excute_#13_20260626T124229KST",
+      "run_b_neo_excute_#14_20260626T130252KST",
+      "run_b_neo_excute_#15_20260626T132313KST",
+      "run_b_neo_excute_#16_20260626T140223KST",
+      "run_b_neo_excute_#17_20260626T142245KST",
+      "run_b_neo_excute_#18_20260626T144308KST",
+      "run_b_neo_excute_#19_20260626T150331KST",
+      "run_b_neo_excute_#20_20260626T152354KST",
+      "run_b_neo_excute_#21_20260626T162628KST",
+      "run_b_neo_excute_#22_20260626T164651KST",
+      "run_b_neo_excute_#23_20260626T170715KST",
+      "run_b_neo_excute_#24_20260626T172740KST",
+      "run_b_neo_excute_#25_20260626T174804KST",
+      "run_b_neo_excute_#26_20260626T183031KST",
+      "run_b_neo_excute_#27_20260626T185055KST",
+      "run_b_neo_excute_#28_20260626T191119KST",
+      "run_b_neo_excute_#29_20260626T193142KST",
+      "run_b_neo_excute_#30_20260626T195208KST"
+    ]
+  },
+  "cr2_3_node_c_entropy": {
+    "tokens": 6054,
+    "q90": 0.9679099969271623,
+    "q95": 1.2156110465979324,
+    "q75": 0.4804251863949666
+  },
+  "cr2_5_node_c_entropy": {
+    "tokens": 10090,
+    "q90": 0.9680605544962874,
+    "q95": 1.215978394964213,
+    "q75": 0.4804251863949666
+  },
+  "response_hashes_recomputed_matches": 2700,
+  "source_checksums": {
+    "provenance/artifacts.json": "59aad105898c4fefbb8eb76b99ea6e0aba89e675ee992f36bb3525d24b51ce61"
+  },
+  "ab_input_hash_matches": [
+    {
+      "subset": "pre",
+      "pairs": 210,
+      "prompt_hash_A_B_matches": 209,
+      "payload_hash_A_B_matches": 0,
+      "retrieved_chunk_ids_hash_A_B_matches": 210
+    },
+    {
+      "subset": "later",
+      "pairs": 690,
+      "prompt_hash_A_B_matches": 0,
+      "payload_hash_A_B_matches": 0,
+      "retrieved_chunk_ids_hash_A_B_matches": 690
+    }
+  ],
+  "run_b_runtime": {
+    "model_name": {
+      "qwen3-nothink": 2700
+    },
+    "model_digest": {
+      "": 2700
+    },
+    "temperature": {
+      "0.0": 2700
+    },
+    "seed": {
+      "42": 2700
+    },
+    "endpoint_mode": {
+      "openai_chat_completions": 2700
+    },
+    "thinking_content_present": {
+      "0": 2700
+    }
+  },
+  "run_b_rag": {
+    "top_k": {
+      "3": 1800
+    },
+    "returned_count": {
+      "3": 1800
+    },
+    "retrieval_method": {
+      "chromadb_vector": 1800
+    }
+  },
+  "srr_boundary_over_sentence_max_error": 0.5,
+  "srr_boundary_over_sum_max_error": 0.8
+}

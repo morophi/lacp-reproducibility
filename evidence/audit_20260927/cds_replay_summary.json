@@ -1,0 +1,16 @@
+{
+  "rows": 7200,
+  "unique_responses": 399,
+  "max_abs_error": 5.551115123125783e-17,
+  "match_at_1e_12": 7200,
+  "match_at_1e_6": 7200,
+  "runtime": {
+    "python": "3.11.2 (main, Apr  8 2026, 01:58:00) [GCC 12.2.0]",
+    "torch": "2.11.0+cpu",
+    "numpy": "2.4.4",
+    "sentence_transformers": "5.4.1"
+  },
+  "snapshot_paths": [
+    "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
+  ]
+}

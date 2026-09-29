@@ -1,0 +1,11 @@
+[SC-PROTOCOL OPERATING POLICY]
+policy_id: sc_protocol_v1
+trigger: cf_c.sc_only_without_retrieved_domain_evidence
+rule: cf_c_sc_only_rag_off
+anchors: []
+evidence_sufficiency: insufficient
+response_mode: grounded_guidance_not_final_decision
+output_status: candidate_not_decision
+responsibility_boundary: final_decision_by_human_public_officer
+verification_required: ["policy_basis", "applicant_facts", "no_final_determination"]
+[/SC-PROTOCOL OPERATING POLICY]

@@ -1,0 +1,15 @@
+{
+  "runner": "src/harness/run_unit_tests_no_pytest.py",
+  "python": "3.12.14",
+  "passed": 50,
+  "failed": 5,
+  "failed_tests": [
+    "tests.test_sc_policy.test_lms_low_confidence_triggers",
+    "tests.test_sc_policy.test_ma_weak_assertion_triggers",
+    "tests.test_trigger_controller.test_formal_a_crosses_threshold_shared_trigger",
+    "tests.test_trigger_controller.test_missing_lms_does_not_block_cds_trigger",
+    "tests.test_counterfactual_conditions.test_legacy_rev11_mode_still_requires_explicit_fixed_rag_exposure"
+  ],
+  "source_unchanged": true,
+  "details": "docs/archived-tests.md"
+}

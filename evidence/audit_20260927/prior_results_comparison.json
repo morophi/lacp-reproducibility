@@ -1,0 +1,44 @@
+[
+  {
+    "file": "main_contrasts.csv",
+    "same_shape": true,
+    "dataframe_exact_equal": true,
+    "rows": 6
+  },
+  {
+    "file": "cf_contrasts.csv",
+    "same_shape": true,
+    "dataframe_exact_equal": true,
+    "rows": 12
+  },
+  {
+    "file": "trigger_contrasts.csv",
+    "same_shape": true,
+    "dataframe_exact_equal": true,
+    "rows": 3
+  },
+  {
+    "file": "response_reproducibility.csv",
+    "same_shape": true,
+    "dataframe_exact_equal": true,
+    "rows": 90
+  },
+  {
+    "file": "node_turn_profiles.csv",
+    "same_shape": true,
+    "dataframe_exact_equal": true,
+    "rows": 90
+  },
+  {
+    "file": "routing.csv",
+    "same_shape": true,
+    "dataframe_exact_equal": true,
+    "rows": 27
+  },
+  {
+    "file": "run_mean_dispersion.csv",
+    "same_shape": true,
+    "dataframe_exact_equal": true,
+    "rows": 30
+  }
+]

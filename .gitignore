@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+!.env.example
+build/
+results/reproduced/
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+private/

@@ -1,0 +1,14 @@
+stage,run_mode,acceptance_status,runs,included
+cf_a,formal,accepted,5,True
+cf_b,formal,accepted,5,True
+cf_c,formal,accepted,5,True
+cf_d,formal,accepted,5,True
+cf_e,formal,accepted,5,True
+cf_f,formal,accepted,10,True
+cr,formal,accepted,10,True
+cr,formal,failed,1,False
+cr2,formal,accepted,5,True
+cr2,smoke,accepted,1,False
+run_b,formal,accepted,30,True
+run_b,formal,rejected,13,False
+tr,formal,pending,1,False

@@ -1,0 +1,302 @@
+[
+  {
+    "run_id": "run_b_neo_excute_#1_20260625T174811KST",
+    "stage": "run_b",
+    "turn": 8,
+    "node": "A",
+    "characters": 652,
+    "sha256": "005173687c3cb373c7997bc186d95fcb3c598011c312ec78fe0cd036a8c5e2d2",
+    "text": "[SC-PROTOCOL OPERATING POLICY]\npolicy_id: sc_protocol_v1\ntrigger: A.low_confidence:abs(d_lms)>theta_lms,B.low_confidence:abs(d_lms)>theta_lms\nrule: metric_catch_trigger\nanchors: [\"v1_full_guideline_table_safe__g16_src_1eeaad84__c00332\", \"v1_full_guideline_table_safe__g15_src_e67a2f65__c00289\", \"v1_full_guideline_table_safe__g16_src_1eeaad84__c00331\"]\nevidence_sufficiency: sufficient\nresponse_mode: grounded_guidance_not_final_decision\noutput_status: candidate_not_decision\nresponsibility_boundary: final_decision_by_human_public_officer\nverification_required: [\"applicant_facts\", \"local_procedure\", \"benefit_history\"]\n[/SC-PROTOCOL OPERATING POLICY]",
+    "payload": {
+      "policy_anchor": [
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g16_src_1eeaad84__c00332",
+          "page": 184,
+          "retrieved_text_excerpt_hash": "6e09258061c770a9d61ef544ad2b70bdd5e4299ad30bc847ca29b65b063de6e6",
+          "section": "★2025년 국민기초생활보장사업안내(3차 중도 개정)",
+          "source_file": "★2025년+국민기초생활보장사업안내(3차+중도+개정).pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g15_src_e67a2f65__c00289",
+          "page": 176,
+          "retrieved_text_excerpt_hash": "109cf66fe8a207958aba8f4a7f3c6f0733c00c574f1708109a3f5e63d68648f9",
+          "section": "2026년도국민기초생활보 사업안내",
+          "source_file": "2026년도국민기초생활보 사업안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g16_src_1eeaad84__c00331",
+          "page": 183,
+          "retrieved_text_excerpt_hash": "fc9000c9ff1c3c3939a19e76fa8e82f0b1051dfc936e4dbffdfa8270821de007",
+          "section": "★2025년 국민기초생활보장사업안내(3차 중도 개정)",
+          "source_file": "★2025년+국민기초생활보장사업안내(3차+중도+개정).pdf"
+        }
+      ],
+      "sc_evidence_sufficiency": "sufficient",
+      "sc_policy_anchor_chunk_ids": [
+        "v1_full_guideline_table_safe__g16_src_1eeaad84__c00332",
+        "v1_full_guideline_table_safe__g15_src_e67a2f65__c00289",
+        "v1_full_guideline_table_safe__g16_src_1eeaad84__c00331"
+      ],
+      "sc_response_mode": "grounded_guidance_not_final_decision",
+      "sc_responsibility_boundary_applied": true,
+      "sc_trigger_reason": "A.low_confidence:abs(d_lms)>theta_lms,B.low_confidence:abs(d_lms)>theta_lms",
+      "sc_trigger_rule_id": "metric_catch_trigger",
+      "sc_triggered": true,
+      "sc_verification_required": [
+        "applicant_facts",
+        "local_procedure",
+        "benefit_history"
+      ]
+    }
+  },
+  {
+    "run_id": "run_b_neo_excute_#6_20260626T095614KST",
+    "stage": "run_b",
+    "turn": 8,
+    "node": "A",
+    "characters": 614,
+    "sha256": "6a492ecb464bfedd4075941a4b881c9247d562df77ea18d73bdbdf314f0fb260",
+    "text": "[SC-PROTOCOL OPERATING POLICY]\npolicy_id: sc_protocol_v1\ntrigger: B.low_confidence:abs(d_lms)>theta_lms\nrule: metric_catch_trigger\nanchors: [\"v1_full_guideline_table_safe__g16_src_1eeaad84__c00332\", \"v1_full_guideline_table_safe__g15_src_e67a2f65__c00289\", \"v1_full_guideline_table_safe__g16_src_1eeaad84__c00331\"]\nevidence_sufficiency: sufficient\nresponse_mode: grounded_guidance_not_final_decision\noutput_status: candidate_not_decision\nresponsibility_boundary: final_decision_by_human_public_officer\nverification_required: [\"applicant_facts\", \"local_procedure\", \"benefit_history\"]\n[/SC-PROTOCOL OPERATING POLICY]",
+    "payload": {
+      "policy_anchor": [
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g16_src_1eeaad84__c00332",
+          "page": 184,
+          "retrieved_text_excerpt_hash": "6e09258061c770a9d61ef544ad2b70bdd5e4299ad30bc847ca29b65b063de6e6",
+          "section": "★2025년 국민기초생활보장사업안내(3차 중도 개정)",
+          "source_file": "★2025년+국민기초생활보장사업안내(3차+중도+개정).pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g15_src_e67a2f65__c00289",
+          "page": 176,
+          "retrieved_text_excerpt_hash": "109cf66fe8a207958aba8f4a7f3c6f0733c00c574f1708109a3f5e63d68648f9",
+          "section": "2026년도국민기초생활보 사업안내",
+          "source_file": "2026년도국민기초생활보 사업안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g16_src_1eeaad84__c00331",
+          "page": 183,
+          "retrieved_text_excerpt_hash": "fc9000c9ff1c3c3939a19e76fa8e82f0b1051dfc936e4dbffdfa8270821de007",
+          "section": "★2025년 국민기초생활보장사업안내(3차 중도 개정)",
+          "source_file": "★2025년+국민기초생활보장사업안내(3차+중도+개정).pdf"
+        }
+      ],
+      "sc_evidence_sufficiency": "sufficient",
+      "sc_policy_anchor_chunk_ids": [
+        "v1_full_guideline_table_safe__g16_src_1eeaad84__c00332",
+        "v1_full_guideline_table_safe__g15_src_e67a2f65__c00289",
+        "v1_full_guideline_table_safe__g16_src_1eeaad84__c00331"
+      ],
+      "sc_response_mode": "grounded_guidance_not_final_decision",
+      "sc_responsibility_boundary_applied": true,
+      "sc_trigger_reason": "B.low_confidence:abs(d_lms)>theta_lms",
+      "sc_trigger_rule_id": "metric_catch_trigger",
+      "sc_triggered": true,
+      "sc_verification_required": [
+        "applicant_facts",
+        "local_procedure",
+        "benefit_history"
+      ]
+    }
+  },
+  {
+    "run_id": "run_b_neo_excute_#1_20260625T174811KST",
+    "stage": "run_b",
+    "turn": 20,
+    "node": "A",
+    "characters": 650,
+    "sha256": "dfcaaf8357ad2e9ae62170663928e876e1fc2041c2e0d3dfdc89238a2b30ffab",
+    "text": "[SC-PROTOCOL OPERATING POLICY]\npolicy_id: sc_protocol_v1\ntrigger: A.context_drift:abs(d_cds)>theta_cds,B.context_drift:abs(d_cds)>theta_cds\nrule: metric_catch_trigger\nanchors: [\"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00444\", \"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00445\", \"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00225\"]\nevidence_sufficiency: sufficient\nresponse_mode: grounded_guidance_not_final_decision\noutput_status: candidate_not_decision\nresponsibility_boundary: final_decision_by_human_public_officer\nverification_required: [\"applicant_facts\", \"local_procedure\", \"benefit_history\"]\n[/SC-PROTOCOL OPERATING POLICY]",
+    "payload": {
+      "policy_anchor": [
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00444",
+          "page": 236,
+          "retrieved_text_excerpt_hash": "ac73a279eadf3cbf7a31ce40d9950766d0e02bed0f99a48ba54375f7ea5d5530",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00445",
+          "page": 236,
+          "retrieved_text_excerpt_hash": "ee859b970ab6f9c3772c452818eb7c79d59f3379e89c5d7cc6b7460c689b0a0f",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00225",
+          "page": 125,
+          "retrieved_text_excerpt_hash": "2a40a938abb9dd82b99090ea441018913cdddb2d9e14937e09188db415a3f3a7",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        }
+      ],
+      "sc_evidence_sufficiency": "sufficient",
+      "sc_policy_anchor_chunk_ids": [
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00444",
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00445",
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00225"
+      ],
+      "sc_response_mode": "grounded_guidance_not_final_decision",
+      "sc_responsibility_boundary_applied": true,
+      "sc_trigger_reason": "A.context_drift:abs(d_cds)>theta_cds,B.context_drift:abs(d_cds)>theta_cds",
+      "sc_trigger_rule_id": "metric_catch_trigger",
+      "sc_triggered": true,
+      "sc_verification_required": [
+        "applicant_facts",
+        "local_procedure",
+        "benefit_history"
+      ]
+    }
+  },
+  {
+    "run_id": "run_b_neo_excute_#6_20260626T095614KST",
+    "stage": "run_b",
+    "turn": 20,
+    "node": "A",
+    "characters": 613,
+    "sha256": "a3e83b4de193de64c321abef0db78a385bea3f742268d9bc898dbf3d46060a95",
+    "text": "[SC-PROTOCOL OPERATING POLICY]\npolicy_id: sc_protocol_v1\ntrigger: B.context_drift:abs(d_cds)>theta_cds\nrule: metric_catch_trigger\nanchors: [\"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00444\", \"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00445\", \"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00225\"]\nevidence_sufficiency: sufficient\nresponse_mode: grounded_guidance_not_final_decision\noutput_status: candidate_not_decision\nresponsibility_boundary: final_decision_by_human_public_officer\nverification_required: [\"applicant_facts\", \"local_procedure\", \"benefit_history\"]\n[/SC-PROTOCOL OPERATING POLICY]",
+    "payload": {
+      "policy_anchor": [
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00444",
+          "page": 236,
+          "retrieved_text_excerpt_hash": "ac73a279eadf3cbf7a31ce40d9950766d0e02bed0f99a48ba54375f7ea5d5530",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00445",
+          "page": 236,
+          "retrieved_text_excerpt_hash": "ee859b970ab6f9c3772c452818eb7c79d59f3379e89c5d7cc6b7460c689b0a0f",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00225",
+          "page": 125,
+          "retrieved_text_excerpt_hash": "2a40a938abb9dd82b99090ea441018913cdddb2d9e14937e09188db415a3f3a7",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        }
+      ],
+      "sc_evidence_sufficiency": "sufficient",
+      "sc_policy_anchor_chunk_ids": [
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00444",
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00445",
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00225"
+      ],
+      "sc_response_mode": "grounded_guidance_not_final_decision",
+      "sc_responsibility_boundary_applied": true,
+      "sc_trigger_reason": "B.context_drift:abs(d_cds)>theta_cds",
+      "sc_trigger_rule_id": "metric_catch_trigger",
+      "sc_triggered": true,
+      "sc_verification_required": [
+        "applicant_facts",
+        "local_procedure",
+        "benefit_history"
+      ]
+    }
+  },
+  {
+    "run_id": "run_b_neo_excute_#1_20260625T174811KST",
+    "stage": "run_b",
+    "turn": 25,
+    "node": "A",
+    "characters": 614,
+    "sha256": "c809642fe9c8bebd25b4f18d8dc31db7a6d278008e7ece5d5e46383b51b4adf2",
+    "text": "[SC-PROTOCOL OPERATING POLICY]\npolicy_id: sc_protocol_v1\ntrigger: A.low_confidence:abs(d_lms)>theta_lms\nrule: metric_catch_trigger\nanchors: [\"v1_full_guideline_table_safe__g03_src_a0510804__c00209\", \"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00062\", \"v1_full_guideline_table_safe__g04_src_19cd6bb8__c00207\"]\nevidence_sufficiency: sufficient\nresponse_mode: grounded_guidance_not_final_decision\noutput_status: candidate_not_decision\nresponsibility_boundary: final_decision_by_human_public_officer\nverification_required: [\"applicant_facts\", \"local_procedure\", \"benefit_history\"]\n[/SC-PROTOCOL OPERATING POLICY]",
+    "payload": {
+      "policy_anchor": [
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g03_src_a0510804__c00209",
+          "page": 120,
+          "retrieved_text_excerpt_hash": "68b57d7ac2878bd675e88411e5e7ede841908845ee350f697f1f91a8c7d1b1ca",
+          "section": "2025 아동분야 사업안내 [1권]",
+          "source_file": "2025+아동분야+사업안내+[1권].pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00062",
+          "page": 35,
+          "retrieved_text_excerpt_hash": "62c8d4e6793f6a656574a7b400cc273995caff59e2a9a260868e21b42734f54a",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g04_src_19cd6bb8__c00207",
+          "page": null,
+          "retrieved_text_excerpt_hash": "9cb100e6c9aad803126d21639304217ac0acc89001ea097bfd7026df905a8b87",
+          "section": "2025 아동분야 사업안내 [2권]",
+          "source_file": "2025+아동분야+사업안내+[2권].pdf"
+        }
+      ],
+      "sc_evidence_sufficiency": "sufficient",
+      "sc_policy_anchor_chunk_ids": [
+        "v1_full_guideline_table_safe__g03_src_a0510804__c00209",
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00062",
+        "v1_full_guideline_table_safe__g04_src_19cd6bb8__c00207"
+      ],
+      "sc_response_mode": "grounded_guidance_not_final_decision",
+      "sc_responsibility_boundary_applied": true,
+      "sc_trigger_reason": "A.low_confidence:abs(d_lms)>theta_lms",
+      "sc_trigger_rule_id": "metric_catch_trigger",
+      "sc_triggered": true,
+      "sc_verification_required": [
+        "applicant_facts",
+        "local_procedure",
+        "benefit_history"
+      ]
+    }
+  },
+  {
+    "run_id": "run_b_neo_excute_#6_20260626T095614KST",
+    "stage": "run_b",
+    "turn": 25,
+    "node": "A",
+    "characters": 614,
+    "sha256": "c809642fe9c8bebd25b4f18d8dc31db7a6d278008e7ece5d5e46383b51b4adf2",
+    "text": "[SC-PROTOCOL OPERATING POLICY]\npolicy_id: sc_protocol_v1\ntrigger: A.low_confidence:abs(d_lms)>theta_lms\nrule: metric_catch_trigger\nanchors: [\"v1_full_guideline_table_safe__g03_src_a0510804__c00209\", \"v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00062\", \"v1_full_guideline_table_safe__g04_src_19cd6bb8__c00207\"]\nevidence_sufficiency: sufficient\nresponse_mode: grounded_guidance_not_final_decision\noutput_status: candidate_not_decision\nresponsibility_boundary: final_decision_by_human_public_officer\nverification_required: [\"applicant_facts\", \"local_procedure\", \"benefit_history\"]\n[/SC-PROTOCOL OPERATING POLICY]",
+    "payload": {
+      "policy_anchor": [
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g03_src_a0510804__c00209",
+          "page": 120,
+          "retrieved_text_excerpt_hash": "68b57d7ac2878bd675e88411e5e7ede841908845ee350f697f1f91a8c7d1b1ca",
+          "section": "2025 아동분야 사업안내 [1권]",
+          "source_file": "2025+아동분야+사업안내+[1권].pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00062",
+          "page": 35,
+          "retrieved_text_excerpt_hash": "62c8d4e6793f6a656574a7b400cc273995caff59e2a9a260868e21b42734f54a",
+          "section": "★2026년 사회보장급여 공통업무 안내",
+          "source_file": "★2026년+사회보장급여+공통업무+안내.pdf"
+        },
+        {
+          "chunk_id": "v1_full_guideline_table_safe__g04_src_19cd6bb8__c00207",
+          "page": null,
+          "retrieved_text_excerpt_hash": "9cb100e6c9aad803126d21639304217ac0acc89001ea097bfd7026df905a8b87",
+          "section": "2025 아동분야 사업안내 [2권]",
+          "source_file": "2025+아동분야+사업안내+[2권].pdf"
+        }
+      ],
+      "sc_evidence_sufficiency": "sufficient",
+      "sc_policy_anchor_chunk_ids": [
+        "v1_full_guideline_table_safe__g03_src_a0510804__c00209",
+        "v1_full_guideline_table_safe__g18_src_cd8d5d7d__c00062",
+        "v1_full_guideline_table_safe__g04_src_19cd6bb8__c00207"
+      ],
+      "sc_response_mode": "grounded_guidance_not_final_decision",
+      "sc_responsibility_boundary_applied": true,
+      "sc_trigger_reason": "A.low_confidence:abs(d_lms)>theta_lms",
+      "sc_trigger_rule_id": "metric_catch_trigger",
+      "sc_triggered": true,
+      "sc_verification_required": [
+        "applicant_facts",
+        "local_procedure",
+        "benefit_history"
+      ]
+    }
+  }
+]
